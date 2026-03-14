@@ -9,7 +9,7 @@
 		"message": "Use content blacklist"
 	},
 	"blacklistTip": {
-		"message": "One entry per line, case insensitive. Concerns stream/file types, Content-Type headers, and URLs, i.e. the addon will be effectively ignore any URLs involving these phrases."
+		"message": "One entry per line, case insensitive. Concerns stream/file types, Content-Type headers, and URLs, i.e. the addon will effectively ignore any URLs involving these phrases."
 	},
 	"buttonClick": {
 		"message": "Browser action button functionality"
@@ -57,7 +57,7 @@
 		"message": "Export/import settings to/from JSON file"
 	},
 	"extText": {
-		"message": "Detects playlists and subtitles used by streams, incl. custom file extensions and headers. Assembles readymade commands for tools."
+		"message": "Detects HLS/DASH/HDS/MSS streams and forwards them to primedl for downloading. Assembles readymade commands for yt-dlp, FFmpeg, Streamlink, and more."
 	},
 	"ffmpeg": {
 		"message": "FFmpeg command"
@@ -253,5 +253,15 @@
 	},
 	"ytdlp": {
 		"message": "yt-dlp command"
+	},
+
+	"primedlRelayEnabled": {
+		"message": "Send detected streams to primedl"
+	},
+	"primedlRelayPort": {
+		"message": "primedl local server port"
+	},
+	"primedlRelayTip": {
+		"message": "primedl must be running on this port to receive streams. Default: 7421."
 	}
 }

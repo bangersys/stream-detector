@@ -1,6 +1,6 @@
 {
-	"name": "The Stream Detector",
-	"version": "2.11.7",
+	"name": "primedl",
+	"version": "1.0.0",
 	"description": "__MSG_extText__",
 	"manifest_version": 3,
 	"default_locale": "en",
@@ -10,7 +10,10 @@
 		"notifications",
 		"storage",
 		"tabs",
-		"webRequest"
+		"webRequest",
+		"webNavigation",
+		"cookies",
+		"scripting"
 	],
 	"host_permissions": ["<all_urls>"],
 	"background": {
@@ -26,15 +29,15 @@
 		"open-popup": {
 			"description": "__MSG_openPopup__"
 		},
-		"open-sidebar": {
-			"description": "__MSG_openSidebar__"
+		"_execute_action": {
+			"description": "__MSG_openPopup__"
 		}
 	},
 	"options_ui": {
 		"page": "options.html"
 	},
 	"action": {
-		"default_title": "The Stream Detector",
+		"default_title": "primedl",
 		"default_popup": "popup.html",
 		"default_icon": {
 			"16": "img/icon-dark-16.png",
@@ -57,5 +60,18 @@
 				"size": 16
 			}
 		]
-	}
+	},
+	"content_scripts": [
+		{
+			"matches": ["*://*/*"],
+			"js": ["content/keepalive.js"],
+			"run_at": "document_idle"
+		}
+	],
+	"web_accessible_resources": [
+		{
+			"resources": ["popup.html", "sidebar.html", "options.html"],
+			"matches": ["<all_urls>"]
+		}
+	]
 }

@@ -1,16 +1,26 @@
+/**
+ * primedl — popup.js
+ * Shared logic for popup.html and sidebar.html.
+ *
+ * Fixed from original:
+ *   [1] Removed deprecated document.execCommand("copy") fallback
+ *   [2] Added primedl relay connection status indicator
+ *   [3] chrome.action compat shim
+ */
+
 import {
 	saveOptionStorage,
 	getStorage,
-	setStorage
+	setStorage,
 } from "./components/storage.js";
 
 import notifIcon from "../img/icon-dark-96.png";
 
-// firefox/chrome
-chrome.browserAction = chrome.browserAction || chrome.action;
+// FIX [3]: MV3/MV2 action compat
+const browserAction = chrome.action ?? chrome.browserAction;
 const isChrome = chrome.runtime.getURL("").startsWith("chrome-extension://");
 
-const _ = chrome.i18n.getMessage; // i18n
+const _ = chrome.i18n.getMessage;
 
 const table = document.getElementById("popupUrlList");
 
@@ -24,59 +34,51 @@ let recentAmount;
 let noRestorePref;
 let urlList = [];
 
+// ─── Helpers ──────────────────────────────────────────────────────────────
+
 const getTimestamp = (timestamp) => {
 	const date = new Date(timestamp);
 	return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
 };
 
-// https://stackoverflow.com/a/18650828
 const formatBytes = (bytes) => {
 	const sizes = ["B", "KB", "MB", "GB", "TB"];
-
 	const i = Math.floor(Math.log(bytes) / Math.log(1024));
-
-	return parseFloat((bytes / 1024 ** i).toFixed(2)) + " " + sizes[i];
+	return `${parseFloat((bytes / 1024 ** i).toFixed(2))} ${sizes[i]}`;
 };
 
 const downloadURL = (file) => {
-	// only firefox supports replacing the referer header
-	const dlOptions = chrome.runtime.getURL("").startsWith("chrome-extension://")
-		? {
-				url: file.url
-		  }
+	const dlOptions = isChrome
+		? { url: file.url }
 		: {
-				headers:
-					file.headers?.filter((h) => h.name.toLowerCase() === "referer") || [],
-				incognito: file.tabData?.incognito || false,
-				url: file.url
-		  };
+			headers:
+				file.headers?.filter((h) => h.name.toLowerCase() === "referer") || [],
+			incognito: file.tabData?.incognito || false,
+			url: file.url,
+		};
 
-	chrome.downloads.download(
-		dlOptions,
-		(err) =>
-			// returns undefined if download is not successful
-			err === undefined &&
+	chrome.downloads.download(dlOptions, (err) => {
+		if (err === undefined) {
 			chrome.notifications.create("error", {
 				type: "basic",
 				iconUrl: notifIcon,
 				title: _("notifDownErrorTitle"),
-				message: _("notifDownErrorText") + file.filename
-			})
-	);
+				message: _("notifDownErrorText") + file.filename,
+			});
+		}
+	});
 };
 
+// ─── Copy URL(s) to clipboard ─────────────────────────────────────────────
 const copyURL = async (info) => {
 	const list = { urls: [], filenames: [], methodIncomp: false };
+
 	for (const e of info) {
 		let code;
-		let methodIncomp;
-		let fileMethod;
+		let methodIncomp = false;
+		let fileMethod = (await getStorage("copyMethod")) || "url";
 
-		const streamURL = e.url;
-		const { filename } = e;
-		fileMethod = (await getStorage("copyMethod")) || "url"; // default to url - just in case
-
-		// don't use user-defined command if empty
+		// Don't use user-defined command if it's empty
 		if (
 			fileMethod.startsWith("user") &&
 			(await getStorage("userCommand" + fileMethod.at(-1))) === null
@@ -85,87 +87,85 @@ const copyURL = async (info) => {
 			methodIncomp = true;
 		}
 
-		if (fileMethod === "url") code = streamURL;
-		else if (fileMethod === "tableForm")
-			code = `${streamURL} | ${
+		const streamURL = e.url;
+		const { filename } = e;
+
+		// ── Build command prefix ───────────────────────────────────────────
+		if (fileMethod === "url") {
+			code = streamURL;
+		} else if (fileMethod === "tableForm") {
+			const source =
 				titlePref && e.tabData?.title && !streamURL.includes(e.tabData.title)
 					? e.tabData.title
-					: e.hostname
-			} | ${getTimestamp(e.timeStamp)}`;
-		else if (fileMethod === "kodiUrl") code = streamURL;
-		else if (fileMethod === "ffmpeg") code = "ffmpeg";
-		else if (fileMethod === "streamlink") code = "streamlink";
-		else if (fileMethod === "ytdlp") {
+					: e.hostname;
+			code = `${streamURL} | ${source} | ${getTimestamp(e.timeStamp)}`;
+		} else if (fileMethod === "kodiUrl") {
+			code = streamURL;
+		} else if (fileMethod === "ffmpeg") {
+			code = "ffmpeg";
+		} else if (fileMethod === "streamlink") {
+			code = "streamlink";
+		} else if (fileMethod === "ytdlp") {
 			code = "yt-dlp --no-part --restrict-filenames";
-
-			if (
-				(await getStorage("multithreadPref")) &&
-				(await getStorage("multithreadAmount"))
-			)
+			if (await getStorage("multithreadPref") && await getStorage("multithreadAmount")) {
 				code += ` -N ${await getStorage("multithreadAmount")}`;
-
-			if (
-				(await getStorage("downloaderPref")) &&
-				(await getStorage("downloaderCommand"))
-			)
+			}
+			if (await getStorage("downloaderPref") && await getStorage("downloaderCommand")) {
 				code += ` --downloader "${await getStorage("downloaderCommand")}"`;
-		} else if (fileMethod === "hlsdl") code = "hlsdl -b -c";
-		else if (fileMethod === "nm3u8dl") code = `N_m3u8DL-RE "${streamURL}"`;
-		else if (fileMethod.startsWith("user"))
+			}
+		} else if (fileMethod === "hlsdl") {
+			code = "hlsdl -b -c";
+		} else if (fileMethod === "nm3u8dl") {
+			code = `N_m3u8DL-RE "${streamURL}"`;
+		} else if (fileMethod.startsWith("user")) {
 			code = await getStorage("userCommand" + fileMethod.at(-1));
-
-		// custom command line
-		const prefName = `customCommand${fileMethod}`;
-		if ((await getStorage("customCommandPref")) && (await getStorage(prefName)))
-			code += ` ${await getStorage(prefName)}`;
-
-		// http proxy
-		if ((await getStorage("proxyPref")) && (await getStorage("proxyCommand"))) {
-			if (fileMethod === "ffmpeg")
-				code += ` -http_proxy "${await getStorage("proxyCommand")}"`;
-			else if (fileMethod === "streamlink")
-				code += ` --http-proxy "${await getStorage("proxyCommand")}"`;
-			else if (fileMethod === "ytdlp")
-				code += ` --proxy "${await getStorage("proxyCommand")}"`;
-			else if (fileMethod === "hlsdl")
-				code += ` -p "${await getStorage("proxyCommand")}"`;
-			else if (fileMethod === "nm3u8dl")
-				code += ` --custom-proxy "${await getStorage("proxyCommand")}"`;
-			else if (fileMethod.startsWith("user"))
-				code = code.replace(
-					new RegExp("%proxy%", "g"),
-					await getStorage("proxyCommand")
-				);
 		}
 
-		// additional headers
+		// ── Custom extra params ────────────────────────────────────────────
+		const prefName = `customCommand${fileMethod}`;
+		if (await getStorage("customCommandPref") && await getStorage(prefName)) {
+			code += ` ${await getStorage(prefName)}`;
+		}
+
+		// ── Proxy ─────────────────────────────────────────────────────────
+		if (await getStorage("proxyPref") && await getStorage("proxyCommand")) {
+			const proxy = await getStorage("proxyCommand");
+			if (fileMethod === "ffmpeg") code += ` -http_proxy "${proxy}"`;
+			else if (fileMethod === "streamlink") code += ` --http-proxy "${proxy}"`;
+			else if (fileMethod === "ytdlp") code += ` --proxy "${proxy}"`;
+			else if (fileMethod === "hlsdl") code += ` -p "${proxy}"`;
+			else if (fileMethod === "nm3u8dl") code += ` --custom-proxy "${proxy}"`;
+			else if (fileMethod.startsWith("user")) code = code.replace(/%proxy%/g, proxy);
+		}
+
+		// ── Headers ───────────────────────────────────────────────────────
 		if (await getStorage("headersPref")) {
-			let headerUserAgent = e.headers.find(
-				(header) => header.name.toLowerCase() === "user-agent"
-			);
-			headerUserAgent
-				? (headerUserAgent = headerUserAgent.value)
-				: (headerUserAgent = navigator.userAgent);
+			let headerUserAgent = e.headers?.find(
+				(h) => h.name.toLowerCase() === "user-agent"
+			)?.value ?? navigator.userAgent;
 
-			let headerCookie = e.headers.find(
-				(header) =>
-					header.name.toLowerCase() === "cookie" ||
-					header.name.toLowerCase() === "set-cookie"
-			);
-			if (headerCookie)
-				headerCookie = headerCookie.value.replace(new RegExp(`"`, "g"), `'`); // double quotation marks mess up the command
+			let headerCookieRaw = e.headers?.find(
+				(h) =>
+					h.name.toLowerCase() === "cookie" ||
+					h.name.toLowerCase() === "set-cookie"
+			)?.value;
 
-			let headerReferer = e.headers.find(
-				(header) => header.name.toLowerCase() === "referer"
-			);
-			headerReferer = headerReferer
-				? headerReferer.value
-				: e.originUrl || e.documentUrl || e.initiator || e.tabData?.url;
+			// Double quotes break shell commands — replace with single
+			if (headerCookieRaw) {
+				headerCookieRaw = headerCookieRaw.replace(/"/g, "'");
+			}
+
+			let headerReferer = e.headers?.find(
+				(h) => h.name.toLowerCase() === "referer"
+			)?.value
+				?? (e.originUrl || e.documentUrl || e.initiator || e.tabData?.url);
+
 			if (
 				headerReferer?.startsWith("about:") ||
 				headerReferer?.startsWith("chrome:")
-			)
+			) {
 				headerReferer = undefined;
+			}
 
 			if (headerUserAgent) {
 				if (fileMethod === "kodiUrl")
@@ -180,157 +180,124 @@ const copyURL = async (info) => {
 				else if (fileMethod === "nm3u8dl")
 					code += ` --header "User-Agent: ${headerUserAgent}"`;
 				else if (fileMethod.startsWith("user"))
-					code = code.replace(new RegExp("%useragent%", "g"), headerUserAgent);
-			} else if (fileMethod.startsWith("user"))
-				code = code.replace(new RegExp("%useragent%", "g"), "");
+					code = code.replace(/%useragent%/g, headerUserAgent);
+			} else if (fileMethod.startsWith("user")) {
+				code = code.replace(/%useragent%/g, "");
+			}
 
-			if (headerCookie) {
+			if (headerCookieRaw) {
 				if (fileMethod === "kodiUrl") {
-					if (headerUserAgent) code += "&";
-					else code += "|";
-					code += `Cookie=${encodeURIComponent(headerCookie)}`;
-				} else if (fileMethod === "ffmpeg")
-					code += ` -headers "Cookie: ${headerCookie}"`;
-				else if (fileMethod === "streamlink")
-					code += ` --http-header "Cookie=${headerCookie}"`;
-				else if (fileMethod === "ytdlp")
-					code += ` --add-header "Cookie:${headerCookie}"`;
-				else if (fileMethod === "hlsdl") code += ` -h "Cookie:${headerCookie}"`;
-				else if (fileMethod === "nm3u8dl")
-					code += ` --header "Cookie: ${headerCookie}"`;
-				else if (fileMethod.startsWith("user"))
-					code = code.replace(new RegExp("%cookie%", "g"), headerCookie);
+					code += headerUserAgent ? "&" : "|";
+					code += `Cookie=${encodeURIComponent(headerCookieRaw)}`;
+				} else if (fileMethod === "ffmpeg") {
+					code += ` -headers "Cookie: ${headerCookieRaw}"`;
+				} else if (fileMethod === "streamlink") {
+					code += ` --http-header "Cookie=${headerCookieRaw}"`;
+				} else if (fileMethod === "ytdlp") {
+					code += ` --add-header "Cookie:${headerCookieRaw}"`;
+				} else if (fileMethod === "hlsdl") {
+					code += ` -h "Cookie:${headerCookieRaw}"`;
+				} else if (fileMethod === "nm3u8dl") {
+					code += ` --header "Cookie: ${headerCookieRaw}"`;
+				} else if (fileMethod.startsWith("user")) {
+					code = code.replace(/%cookie%/g, headerCookieRaw);
+				}
 			} else if (fileMethod === "ytdlp") {
-				if (!isChrome) code += ` --cookies-from-browser firefox`;
-				else code += ` --cookies-from-browser chrome`;
-			} else if (fileMethod.startsWith("user"))
-				code = code.replace(new RegExp("%cookie%", "g"), "");
+				// No cookie header captured — try to pull from browser
+				code += isChrome
+					? " --cookies-from-browser chrome"
+					: " --cookies-from-browser firefox";
+			} else if (fileMethod.startsWith("user")) {
+				code = code.replace(/%cookie%/g, "");
+			}
 
 			if (headerReferer) {
 				if (fileMethod === "kodiUrl") {
-					if (headerUserAgent || headerCookie) code += "&";
-					else code += "|";
+					code += headerUserAgent || headerCookieRaw ? "&" : "|";
 					code += `Referer=${encodeURIComponent(headerReferer)}`;
-				} else if (fileMethod === "ffmpeg")
+				} else if (fileMethod === "ffmpeg") {
 					code += ` -referer "${headerReferer}"`;
-				else if (fileMethod === "streamlink")
+				} else if (fileMethod === "streamlink") {
 					code += ` --http-header "Referer=${headerReferer}"`;
-				else if (fileMethod === "ytdlp")
-					code += ` --referer "${headerReferer}"`;
-				else if (fileMethod === "hlsdl")
+				} else if (fileMethod === "ytdlp") {
+					code += ` --add-header "Referer:${headerReferer}"`;
+				} else if (fileMethod === "hlsdl") {
 					code += ` -h "Referer:${headerReferer}"`;
-				else if (fileMethod === "nm3u8dl")
+				} else if (fileMethod === "nm3u8dl") {
 					code += ` --header "Referer: ${headerReferer}"`;
-				else if (fileMethod.startsWith("user"))
-					code = code.replace(new RegExp("%referer%", "g"), headerReferer);
-			} else if (fileMethod.startsWith("user"))
-				code = code.replace(new RegExp("%referer%", "g"), "");
-		}
-
-		if (
-			fileMethod.startsWith("user") &&
-			(e.documentUrl || e.originUrl || e.initiator || e.tabData?.url)
-		)
-			code = code.replace(
-				new RegExp("%origin%", "g"),
-				e.documentUrl || e.originUrl || e.initiator || e.tabData?.url
-			);
-		else if (fileMethod.startsWith("user"))
-			code = code.replace(new RegExp("%origin%", "g"), "");
-
-		if (fileMethod.startsWith("user") && e.tabData?.title)
-			code = code.replace(
-				new RegExp("%tabtitle%", "g"),
-				e.tabData.title.replace(/[/\\?%*:|"<>]/g, "_")
-			);
-		else if (fileMethod.startsWith("user"))
-			code = code.replace(new RegExp("%tabtitle%", "g"), "");
-
-		let outFilename;
-		if (filenamePref && e.tabData?.title) outFilename = e.tabData.title;
-		else {
-			outFilename = filename;
-			if (outFilename.indexOf(".") !== -1) {
-				// filename without extension
-				outFilename = outFilename.split(".");
-				outFilename.pop();
-				outFilename = outFilename.join(".");
+				} else if (fileMethod.startsWith("user")) {
+					code = code.replace(/%referer%/g, headerReferer);
+				}
+			} else if (fileMethod.startsWith("user")) {
+				code = code.replace(/%referer%/g, "");
+				code = code.replace(/%origin%/g, "");
 			}
 		}
 
-		// sanitize tab title and timestamp
-		outFilename = outFilename.replace(/[/\\?%*:|"<>]/g, "_");
-		const outExtension = (await getStorage("fileExtension")) || "ts";
-		const outTimestamp = getTimestamp(e.timeStamp).replace(
-			/[/\\?%*:|"<>]/g,
-			"_"
-		);
+		// ── Filename + final command tail ──────────────────────────────────
+		const filenamePrefVal = await getStorage("filenamePref");
+		const timestampPrefVal = await getStorage("timestampPref");
 
-		// final part of command
+		let outFilename = filenamePrefVal && e.tabData?.title ? e.tabData.title : filename;
+		if (outFilename.lastIndexOf(".") !== -1) {
+			outFilename = outFilename.slice(0, outFilename.lastIndexOf("."));
+		}
+		outFilename = outFilename.replace(/[/\\?%*:|"<>]/g, "_");
+
+		const outExtension = (await getStorage("fileExtension")) || "ts";
+		const outTimestamp = getTimestamp(e.timeStamp).replace(/[/\\?%*:|"<>]/g, "_");
+
 		if (fileMethod === "ffmpeg") {
 			code += ` -i "${streamURL}" -c copy "${outFilename}`;
-			if (timestampPref) code += ` ${outTimestamp}`;
+			if (timestampPrefVal) code += ` ${outTimestamp}`;
 			code += `.${outExtension}"`;
 		} else if (fileMethod === "streamlink") {
 			if ((await getStorage("streamlinkOutput")) === "file") {
 				code += ` -o "${outFilename}`;
-				if (timestampPref) code += ` ${outTimestamp}`;
+				if (timestampPrefVal) code += ` ${outTimestamp}`;
 				code += `.${outExtension}"`;
 			}
 			code += ` "${streamURL}" best`;
 		} else if (fileMethod === "ytdlp") {
-			if ((filenamePref && e.tabData?.title) || timestampPref) {
+			if ((filenamePrefVal && e.tabData?.title) || timestampPrefVal) {
 				code += ` --output "${outFilename}`;
-				if (timestampPref) code += ` %(epoch)s`;
+				if (timestampPrefVal) code += " %(epoch)s";
 				code += `.%(ext)s"`;
 			}
 			code += ` "${streamURL}"`;
 		} else if (fileMethod === "hlsdl") {
 			code += ` -o "${outFilename}`;
-			if (timestampPref) code += ` ${outTimestamp}`;
+			if (timestampPrefVal) code += ` ${outTimestamp}`;
 			code += `.${outExtension}" "${streamURL}"`;
 		} else if (fileMethod === "nm3u8dl") {
 			code += ` --save-name "${outFilename}`;
-			if (timestampPref) code += ` ${outTimestamp}`;
+			if (timestampPrefVal) code += ` ${outTimestamp}`;
 			code += `"`;
 		} else if (fileMethod.startsWith("user")) {
-			code = code.replace(new RegExp("%url%", "g"), streamURL);
-			code = code.replace(new RegExp("%filename%", "g"), filename);
-			code = code.replace(new RegExp("%timestamp%", "g"), outTimestamp);
+			code = code.replace(/%url%/g, streamURL);
+			code = code.replace(/%filename%/g, filename);
+			code = code.replace(/%timestamp%/g, outTimestamp);
+			code = code.replace(/%tabtitle%/g, e.tabData?.title ?? "");
 		}
 
-		// regex for user command
-		if (
-			fileMethod.startsWith("user") &&
-			(await getStorage("regexCommandPref"))
-		) {
+		// ── Regex substitution for user commands ──────────────────────────
+		if (fileMethod.startsWith("user") && await getStorage("regexCommandPref")) {
 			const regexCommand = await getStorage("regexCommand");
 			const regexReplace = await getStorage("regexReplace");
-
-			code = code.replace(new RegExp(regexCommand, "g"), regexReplace || "");
+			if (regexCommand) {
+				code = code.replace(new RegExp(regexCommand, "g"), regexReplace || "");
+			}
 		}
 
-		// used to communicate with clipboard/notifications api
 		list.urls.push(code);
 		list.filenames.push(filename);
-		list.methodIncomp = methodIncomp;
+		list.methodIncomp = list.methodIncomp || methodIncomp;
 	}
 
+	// ─── FIX [1]: clipboard — navigator.clipboard only, no execCommand ────
 	try {
-		if (navigator.clipboard?.writeText)
-			navigator.clipboard.writeText(list.urls.join(newline));
-		else {
-			// old copying method for compatibility purposes
-			const copyText = document.createElement("textarea");
-			copyText.style.position = "absolute";
-			copyText.style.left = "-5454px";
-			copyText.style.top = "-5454px";
-			document.body.appendChild(copyText);
-			copyText.value = list.urls.join(newline);
-			copyText.select();
-			document.execCommand("copy");
-			document.body.removeChild(copyText);
-		}
+		await navigator.clipboard.writeText(list.urls.join(newline));
+
 		if ((await getStorage("notifPref")) === false) {
 			chrome.notifications.create("copy", {
 				type: "basic",
@@ -339,232 +306,112 @@ const copyURL = async (info) => {
 				message:
 					(list.methodIncomp
 						? _("notifIncompCopiedText")
-						: _("notifCopiedText")) + list.filenames.join(newline)
+						: _("notifCopiedText")) + list.filenames.join(newline),
 			});
 		}
-	} catch (e) {
+	} catch (err) {
+		console.error("[primedl/popup] Clipboard write failed:", err);
 		chrome.notifications.create("error", {
 			type: "basic",
 			iconUrl: notifIcon,
 			title: _("notifErrorTitle"),
-			message: _("notifErrorText") + e
+			message: _("notifErrorText") + list.filenames.join(newline),
 		});
 	}
 };
 
-const handleURL = (url) => {
-	if (
-		downloadDirectPref &&
-		(url.category === "files" || url.category === "custom")
-	)
-		downloadURL(url);
-	else copyURL([url]);
+// ─── Build URL list table ──────────────────────────────────────────────────
+const insertPlaceholder = () => {
+	const row = table.insertRow();
+	const cell = row.insertCell();
+	cell.colSpan = 2;
+	cell.textContent = _("placeholderCell");
 };
 
-const deleteURL = (requestDetails) => {
-	const deleteUrlStorage = [requestDetails];
-	chrome.runtime.sendMessage({
-		delete: deleteUrlStorage,
-		previous: document.getElementById("tabPrevious").checked
-	}); // notify background script to update urlstorage. workaround
+const insertList = (urls) => {
+	for (const e of urls) {
+		const row = table.insertRow();
+		const cellName = row.insertCell();
+		const cellDel = row.insertCell();
+
+		const contentSize = e.headers?.find(
+			(h) => h.name.toLowerCase() === "content-length"
+		)?.value;
+
+		const source = titlePref && e.tabData?.title ? e.tabData.title : e.hostname;
+
+		cellName.innerHTML = `
+			<span class="urlSource">${source}</span>
+			<span class="urlFilename">${e.filename}</span>
+			<span class="urlInfo">
+				${e.type}
+				${contentSize ? " · " + formatBytes(Number(contentSize)) : ""}
+				· ${getTimestamp(e.timeStamp)}
+			</span>
+		`;
+
+		cellName.title = _("deleteTooltip");
+		cellDel.textContent = "✖";
+
+		// Click filename → copy URL
+		cellName.addEventListener("click", async () => {
+			if (downloadDirectPref && e.category !== "stream" && e.category !== "subtitles") {
+				downloadURL(e);
+			} else {
+				await copyURL([e]);
+			}
+		});
+
+		// Click X → delete
+		cellDel.addEventListener("click", async () => {
+			const isPrev = document.getElementById("tabPrevious").checked;
+			chrome.runtime.sendMessage({ delete: [e], previous: isPrev });
+			row.remove();
+			if (table.rows.length === 0) insertPlaceholder();
+		});
+	}
 };
 
-const getIdList = () =>
-	Array.from(
-		document.getElementById("popupUrlList").getElementsByTagName("tr")
-	).map((tr) => tr.id);
-
-const copyAll = () => {
-	// this seems like a roundabout way of doing this but oh well
-	const idList = getIdList();
-	const copyUrlList = urlList.filter((url) => idList.includes(url.requestId));
-
-	copyURL(copyUrlList);
-};
-
-const clearList = () => {
-	const idList = getIdList();
-	const deleteUrlStorage = urlList.filter((url) =>
-		idList.includes(url.requestId)
-	);
-
-	chrome.runtime.sendMessage({
-		delete: deleteUrlStorage,
-		previous: document.getElementById("tabPrevious").checked
-	});
-};
-
+// ─── Rebuild the URL list ──────────────────────────────────────────────────
 const createList = async () => {
-	const insertList = (urls) => {
-		document.getElementById("copyAll").disabled = false;
-		document.getElementById("clearList").disabled = false;
-		document.getElementById("filterInput").disabled = false;
-		document.getElementById("headers").style.display = "";
-
-		for (const requestDetails of urls) {
-			// everyone's favorite - dom manipulation in vanilla js
-			const row = document.createElement("tr");
-			row.id = requestDetails.requestId;
-			row.className = "urlEntry";
-
-			if (document.body.id === "popup") {
-				const extCell = document.createElement("td");
-				extCell.textContent =
-					(requestDetails.category === "files" ||
-						requestDetails.category === "custom") &&
-					downloadDirectPref
-						? "🔽 " + requestDetails.type.toUpperCase()
-						: requestDetails.type.toUpperCase();
-				row.appendChild(extCell);
-			}
-
-			const urlCell = document.createElement("td");
-			urlCell.className = "urlCell";
-			const urlHref = document.createElement("a");
-			urlHref.textContent = requestDetails.filename;
-			urlHref.href = requestDetails.url;
-			urlCell.onclick = (e) => {
-				e.preventDefault();
-				handleURL(requestDetails);
-			};
-			urlHref.onclick = (e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				handleURL(requestDetails);
-			};
-			urlHref.title = requestDetails.url;
-			urlCell.appendChild(urlHref);
-			row.appendChild(urlCell);
-
-			if (document.body.id === "popup") {
-				const sizeCell = document.createElement("td");
-				const sizeCellHeader = requestDetails.headers.find(
-					(header) => header.name.toLowerCase() === "content-length"
-				);
-				if (
-					(requestDetails.category === "files" ||
-						requestDetails.category === "custom") &&
-					sizeCellHeader &&
-					Number(sizeCellHeader.value) !== 0
-				) {
-					sizeCell.textContent = formatBytes(sizeCellHeader.value);
-					sizeCell.title = sizeCellHeader.value;
-				} else sizeCell.textContent = "-";
-				row.appendChild(sizeCell);
-
-				const sourceCell = document.createElement("td");
-				sourceCell.textContent =
-					titlePref &&
-					requestDetails.tabData?.title &&
-					// tabData.title falls back to url
-					!requestDetails.url.includes(requestDetails.tabData.title)
-						? requestDetails.tabData.title
-						: requestDetails.hostname;
-				sourceCell.title =
-					requestDetails.documentUrl ||
-					requestDetails.originUrl ||
-					requestDetails.initiator ||
-					requestDetails.tabData.url;
-				row.appendChild(sourceCell);
-
-				const timestampCell = document.createElement("td");
-				timestampCell.textContent = getTimestamp(requestDetails.timeStamp);
-				row.appendChild(timestampCell);
-			}
-
-			const deleteCell = document.createElement("td");
-			const deleteX = document.createElement("a");
-			deleteX.textContent = "✖";
-			deleteX.href = "";
-			deleteX.style.textDecoration = "none";
-			deleteX.onclick = (e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				deleteURL(requestDetails);
-			};
-			deleteCell.onclick = (e) => {
-				e.preventDefault();
-				deleteURL(requestDetails);
-			};
-			deleteX.onfocus = () => (urlCell.style.textDecoration = "line-through");
-			deleteX.onblur = () => (urlCell.style.textDecoration = "initial");
-			deleteCell.onmouseover = () =>
-				(urlCell.style.textDecoration = "line-through");
-			deleteCell.onmouseout = () => (urlCell.style.textDecoration = "initial");
-			deleteCell.style.cursor = "pointer";
-			deleteCell.title = _("deleteTooltip");
-			deleteCell.appendChild(deleteX);
-			row.appendChild(deleteCell);
-
-			table.appendChild(row);
-		}
-	};
-
-	const insertPlaceholder = () => {
-		document.getElementById("copyAll").disabled = true;
-		document.getElementById("clearList").disabled = true;
-		if (!document.getElementById("filterInput").value)
-			document.getElementById("filterInput").disabled = true;
-		document.getElementById("headers").style.display = "none";
-
-		const row = document.createElement("tr");
-
-		const placeholderCell = document.createElement("td");
-		placeholderCell.colSpan = document.getElementsByTagName("th").length; // i would never remember to update this manually
-		placeholderCell.textContent = _("placeholderCell");
-
-		row.appendChild(placeholderCell);
-
-		table.appendChild(row);
-	};
-
-	const urlStorage = await getStorage("urlStorage");
+	const urlStorageFilter = (await getStorage("filterInput"))?.toLowerCase();
+	const urlStorageFull = await getStorage("urlStorage");
 	const urlStorageRestore = await getStorage("urlStorageRestore");
 
-	if (urlStorage.length || urlStorageRestore.length) {
-		const urlStorageFilter = document
-			.getElementById("filterInput")
-			.value.toLowerCase();
+	if (urlStorageFull !== null || urlStorageRestore !== null) {
+		const urlStorage = urlStorageFull ?? [];
+		const tab = await chrome.tabs.query({ active: true, currentWindow: true });
 
-		// do the query first to avoid async issues
-		chrome.tabs.query({ active: true, currentWindow: true }, (tab) => {
-			if (document.getElementById("tabThis").checked) {
-				urlList = urlStorage
-					? urlStorage.filter((url) => url.tabId === tab[0].id)
-					: [];
-			} else if (document.getElementById("tabAll").checked) {
-				urlList = urlStorage
-					? urlStorage.filter(
-							(url) => url.tabData?.incognito === tab[0].incognito
-					  )
-					: [];
-			} else if (document.getElementById("tabPrevious").checked) {
-				urlList = urlStorageRestore || [];
-			}
+		if (document.getElementById("tabThis").checked) {
+			urlList = tab?.[0]?.id
+				? urlStorage.filter((url) => url.tabId === tab[0].id)
+				: [];
+		} else if (document.getElementById("tabAll").checked) {
+			urlList = urlStorage.filter(
+				(url) => url.tabData?.incognito === tab?.[0]?.incognito
+			);
+		} else if (document.getElementById("tabPrevious").checked) {
+			urlList = urlStorageRestore ?? [];
+		}
 
-			urlList = urlList.length && urlList.reverse(); // latest entries first
+		urlList = urlList.length ? [...urlList].reverse() : [];
 
-			if (urlStorageFilter)
-				urlList =
-					urlList.length &&
-					urlList.filter(
-						(url) =>
-							url.filename.toLowerCase().includes(urlStorageFilter) ||
-							url.tabData?.title?.toLowerCase().includes(urlStorageFilter) ||
-							url.type.toLowerCase().includes(urlStorageFilter) ||
-							url.hostname.toLowerCase().includes(urlStorageFilter)
-					);
+		if (urlStorageFilter) {
+			urlList = urlList.filter(
+				(url) =>
+					url.filename.toLowerCase().includes(urlStorageFilter) ||
+					url.tabData?.title?.toLowerCase().includes(urlStorageFilter) ||
+					url.type.toLowerCase().includes(urlStorageFilter) ||
+					url.hostname.toLowerCase().includes(urlStorageFilter)
+			);
+		}
 
-			if (recentPref && urlList.length > recentAmount)
-				urlList.length = recentAmount;
+		if (recentPref && urlList.length > recentAmount) {
+			urlList.length = recentAmount;
+		}
 
-			// clear list first just in case - quick and dirty
-			table.innerHTML = "";
-
-			urlList.length
-				? insertList(urlList) // latest entries first
-				: insertPlaceholder();
-		});
+		table.innerHTML = "";
+		urlList.length ? insertList(urlList) : insertPlaceholder();
 	} else {
 		table.innerHTML = "";
 		insertPlaceholder();
@@ -581,7 +428,7 @@ const restoreOptions = async () => {
 	filenamePref = await getStorage("filenamePref");
 	timestampPref = await getStorage("timestampPref");
 	downloadDirectPref = await getStorage("downloadDirectPref");
-	newline = await getStorage("newline");
+	newline = await getStorage("newline") ?? "\n";
 	recentPref = await getStorage("recentPref");
 	recentAmount = await getStorage("recentAmount");
 	noRestorePref = await getStorage("noRestorePref");
@@ -590,92 +437,89 @@ const restoreOptions = async () => {
 	for (const option of options) {
 		option.onchange = (e) => saveOption(e);
 		if ((await getStorage(option.id)) !== null) {
-			if (
-				document.getElementById(option.id).type === "checkbox" ||
-				document.getElementById(option.id).type === "radio"
-			)
-				document.getElementById(option.id).checked = await getStorage(
-					option.id
-				);
-			else
-				document.getElementById(option.id).value = await getStorage(option.id);
+			if (option.type === "checkbox" || option.type === "radio") {
+				option.checked = await getStorage(option.id);
+			} else {
+				option.value = await getStorage(option.id);
+			}
 		}
 	}
 };
 
+// ─── Relay status indicator ────────────────────────────────────────────────
+function updateRelayIndicator(status) {
+	const el = document.getElementById("primedlStatus");
+	if (!el) return;
+	el.textContent = status === "connected" ? "● primedl connected" : "○ primedl offline";
+	el.className = status === "connected" ? "relay-connected" : "relay-disconnected";
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async () => {
-	// reset badge when clicked
-	if (document.body.id === "popup") {
-		chrome.browserAction.setBadgeBackgroundColor({ color: "silver" });
-		chrome.browserAction.setBadgeText({ text: "" });
-		// workaround to detect popup close
-		chrome.runtime.connect({ name: "popup" });
+	await restoreOptions();
+	await createList();
+
+	// Tell background the popup is open (for badge clear on close)
+	const port = chrome.runtime.connect({ name: "popup" });
+
+	// Filter input
+	const filterEl = document.getElementById("filterInput");
+	if (filterEl) {
+		filterEl.oninput = async (e) => {
+			await setStorage({ filterInput: e.target.value.toLowerCase() });
+			await createList();
+		};
 	}
 
-	await restoreOptions();
+	const clearFilterEl = document.getElementById("clearFilterInput");
+	if (clearFilterEl) {
+		clearFilterEl.onclick = async () => {
+			if (filterEl) filterEl.value = "";
+			await setStorage({ filterInput: "" });
+			await createList();
+		};
+	}
 
-	// i18n
+	// Action buttons
+	document.getElementById("copyAll")?.addEventListener("click", async () => {
+		if (urlList.length) await copyURL(urlList);
+	});
+
+	document.getElementById("clearList")?.addEventListener("click", async () => {
+		const isPrev = document.getElementById("tabPrevious").checked;
+		chrome.runtime.sendMessage({ delete: urlList, previous: isPrev });
+		table.innerHTML = "";
+		urlList = [];
+		insertPlaceholder();
+	});
+
+	document.getElementById("openOptions")?.addEventListener("click", () => {
+		chrome.runtime.openOptionsPage();
+	});
+
+	// Disable toggle
+	document.getElementById("disablePref")?.addEventListener("change", async (e) => {
+		saveOptionStorage(e);
+	});
+
+	// i18n labels
 	const labels = document.getElementsByTagName("label");
 	for (const label of labels) {
-		label.textContent = _(label.htmlFor);
+		if (label.htmlFor) label.textContent = _(label.htmlFor);
 	}
 	const selectOptions = document.getElementsByTagName("option");
-	for (const selectOption of selectOptions) {
-		if (!selectOption.textContent)
-			selectOption.textContent = _(selectOption.value);
+	for (const opt of selectOptions) {
+		if (!opt.textContent) opt.textContent = _(opt.value);
 	}
 
-	// button and text input functionality
-	document.getElementById("copyAll").onclick = (e) => {
-		e.preventDefault();
-		copyAll();
-	};
-
-	document.getElementById("clearList").onclick = (e) => {
-		e.preventDefault();
-		clearList();
-	};
-
-	document.getElementById("openOptions").onclick = (e) => {
-		e.preventDefault();
-		chrome.runtime.openOptionsPage();
-	};
-
-	document.getElementById("filterInput").onkeyup = () => {
-		createList();
-		if (!document.getElementById("filterInput").value) {
-			document.getElementById("clearFilterInput").disabled = true;
-			document.getElementById("clearFilterInput").style.cursor = "default";
-		} else {
-			document.getElementById("clearFilterInput").disabled = false;
-			document.getElementById("clearFilterInput").style.cursor = "pointer";
-		}
-	};
-
-	if (!document.getElementById("filterInput").value) {
-		document.getElementById("clearFilterInput").disabled = true;
-		document.getElementById("clearFilterInput").style.cursor = "default";
-	} else {
-		document.getElementById("clearFilterInput").disabled = false;
-		document.getElementById("clearFilterInput").style.cursor = "pointer";
-	}
-
-	document.getElementById("clearFilterInput").onclick = () => {
-		document.getElementById("filterInput").value = "";
-		setStorage({ filterInput: "" });
-		createList();
-		document.getElementById("clearFilterInput").style.cursor = "default";
-	};
-
-	if (noRestorePref) {
-		if (document.getElementById("tabPrevious").checked)
-			document.getElementById("tabAll").checked = true;
-		document.getElementById("tabPrevious").parentElement.style.display = "none";
-	}
-	createList();
-
+	// Message listener — live updates from background
 	chrome.runtime.onMessage.addListener((message) => {
 		if (message.urlStorage) createList();
-		if (document.body.id === "sidebar" && message.options) restoreOptions();
+		if (message.options) restoreOptions();
+		if (message.primedlStatus) updateRelayIndicator(message.primedlStatus);
+		if (message.primedlProgress) {
+			// TODO: show per-file progress in UI
+			console.log("[primedl] progress:", message.primedlProgress);
+		}
 	});
 });

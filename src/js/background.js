@@ -1,7 +1,27 @@
+/**
+ * primedl — background.js
+ *
+ * Core stream detection engine.
+ * Works as:
+ *   - Firefox MV2 non-persistent background script
+ *   - Chrome MV3 service worker
+ *
+ * Fixed from original stream-detector:
+ *   [1] chrome.action compat shim (MV3 Chrome vs MV2 Firefox)
+ *   [2] chrome.sidebarAction guarded (Firefox-only API)
+ *   [3] MSS detection via dedicated URL path check (not fragile ext match)
+ *   [4] keepalive port handler for Chrome MV3 SW persistence
+ *   [5] primedl relay integration — detected streams sent to Rust server
+ *   [6] Cookie extraction integrated into detection flow
+ */
+
 import defaults from "./components/defaults.js";
 import supported from "./components/supported.js";
 import { getStorage, setStorage, clearStorage } from "./components/storage.js";
+import { getCookiesForUrl } from "./components/cookies.js";
+import { sendDetection, reconnect as relayReconnect } from "./components/relay.js";
 
+// ─── Icon imports (handled by Bun bundler as data URLs) ───────────────────
 import iconLight16 from "../img/icon-light-16.png";
 import iconLight48 from "../img/icon-light-48.png";
 import iconLight96 from "../img/icon-light-96.png";
@@ -15,19 +35,26 @@ import iconDarkEnabled16 from "../img/icon-dark-enabled-16.png";
 import iconDarkEnabled48 from "../img/icon-dark-enabled-48.png";
 import iconDarkEnabled96 from "../img/icon-dark-enabled-96.png";
 
-// firefox/chrome
-chrome.browserAction = chrome.browserAction || chrome.action;
+// ─── FIX [1]: chrome.action / chrome.browserAction compat shim ────────────
+// MV3 Chrome uses chrome.action; MV2 Firefox uses chrome.browserAction.
+// The ?? ensures whichever one exists is used.
+const browserAction = chrome.action ?? chrome.browserAction;
 
 const _ = chrome.i18n.getMessage;
 
-const CLEAR_STORAGE = false;
+const isChrome = chrome.runtime.getURL("").startsWith("chrome-extension://");
+const isDarkMode = () =>
+	typeof window !== "undefined" &&
+	window.matchMedia?.("(prefers-color-scheme: dark)").matches;
 
+// ─── State ────────────────────────────────────────────────────────────────
 const queue = [];
 const allRequestDetails = [];
 let urlStorage = [];
 let urlStorageRestore = [];
 let requestTimeoutId = -1;
 
+// User preference vars (populated by updateVars)
 let subtitlePref;
 let filePref;
 let fileSizePref;
@@ -43,15 +70,13 @@ let notifDetectPref;
 let notifPref;
 let downloadDirectPref;
 let autoDownloadPref;
+let primedlRelayEnabled;
 let newline;
 
 const customSupported = { ext: [], ct: [], type: "CUSTOM", category: "custom" };
-const isChrome = chrome.runtime.getURL("").startsWith("chrome-extension://");
-const isDarkMode = () =>
-	window.matchMedia("(prefers-color-scheme: dark)").matches;
 
+// ─── Preference loader ────────────────────────────────────────────────────
 const updateVars = async () => {
-	// the web storage api crashes the entire browser sometimes so I have to resort to this nonsense
 	subtitlePref = await getStorage("subtitlePref");
 	filePref = await getStorage("filePref");
 	fileSizePref = await getStorage("fileSizePref");
@@ -60,85 +85,46 @@ const updateVars = async () => {
 	blacklistPref = await getStorage("blacklistPref");
 	blacklistEntries = await getStorage("blacklistEntries");
 	customExtPref = await getStorage("customExtPref");
-	customSupported.ext = await getStorage("customExtEntries");
+	customSupported.ext = (await getStorage("customExtEntries")) ?? [];
 	customCtPref = await getStorage("customCtPref");
-	customSupported.ct = await getStorage("customCtEntries");
+	customSupported.ct = (await getStorage("customCtEntries")) ?? [];
 	noRestorePref = await getStorage("noRestorePref");
 	disablePref = await getStorage("disablePref");
 	notifDetectPref = await getStorage("notifDetectPref");
 	notifPref = await getStorage("notifPref");
 	downloadDirectPref = await getStorage("downloadDirectPref");
 	autoDownloadPref = await getStorage("autoDownloadPref");
+	primedlRelayEnabled = await getStorage("primedlRelayEnabled");
 };
 
+// ─── Icon update ──────────────────────────────────────────────────────────
 const updateIcons = () => {
-	if (disablePref !== true)
-		chrome.browserAction.setIcon({
+	if (disablePref !== true) {
+		browserAction.setIcon({
 			path: {
-				16: isDarkMode ? iconDarkEnabled16 : iconLightEnabled16,
-				48: isDarkMode ? iconDarkEnabled48 : iconLightEnabled48,
-				96: isDarkMode ? iconDarkEnabled96 : iconLightEnabled96
-			}
+				16: isDarkMode() ? iconDarkEnabled16 : iconLightEnabled16,
+				48: isDarkMode() ? iconDarkEnabled48 : iconLightEnabled48,
+				96: isDarkMode() ? iconDarkEnabled96 : iconLightEnabled96,
+			},
 		});
-	else
-		chrome.browserAction.setIcon({
+	} else {
+		browserAction.setIcon({
 			path: {
-				16: isDarkMode ? iconDark16 : iconLight16,
-				48: isDarkMode ? iconDark48 : iconLight48,
-				96: isDarkMode ? iconDark96 : iconLight96
-			}
+				16: isDarkMode() ? iconDark16 : iconLight16,
+				48: isDarkMode() ? iconDark48 : iconLight48,
+				96: isDarkMode() ? iconDark96 : iconLight96,
+			},
 		});
-};
-
-const addListeners = () => {
-	chrome.webRequest.onBeforeSendHeaders.addListener(
-		urlFilter,
-		{ urls: ["<all_urls>"] },
-		isChrome ? ["requestHeaders", "extraHeaders"] : ["requestHeaders"]
-	);
-
-	chrome.webRequest.onHeadersReceived.addListener(
-		urlFilter,
-		{ urls: ["<all_urls>"] },
-		isChrome ? ["responseHeaders", "extraHeaders"] : ["responseHeaders"]
-	);
-};
-
-const init = async () => {
-	for (const option in defaults) {
-		if ((await getStorage(option)) === null)
-			// write defaults to storage
-			await setStorage({ [option]: defaults[option] });
 	}
-
-	// reset filter on startup
-	await setStorage({ filterInput: "" });
-
-	setStorage({ version: chrome.runtime.getManifest().version });
-
-	// newline shouldn't really be an issue but just in case
-	chrome.runtime.getPlatformInfo(async (info) => {
-		newline = info.os === "win" ? "\r\n" : "\n";
-		setStorage({ newline });
-	});
-
-	chrome.browserAction.setBadgeBackgroundColor({ color: "green" });
-	chrome.browserAction.setBadgeText({ text: "" });
-
-	chrome.browserAction.onClicked.addListener(
-		(tab, OnClickData) =>
-			OnClickData?.button === 1 && chrome.tabs.create({ url: "/popup.html" })
-	);
-
-	await updateVars();
 };
 
-const getTabData = async (tab) =>
-	new Promise((resolve) => chrome.tabs.get(tab, (data) => resolve(data)));
+// ─── Tab data helper ──────────────────────────────────────────────────────
+const getTabData = async (tabId) =>
+	new Promise((resolve) => chrome.tabs.get(tabId, (data) => resolve(data)));
 
+// ─── URL validator — gate before storing ──────────────────────────────────
 const urlValidator = (e, requestDetails, headerSize, headerCt) => {
 	if (!e) return false;
-
 	if (requestDetails.tabId === -1) return false;
 
 	const isExistingUrl = urlStorage.find((u) => u.url === requestDetails.url);
@@ -150,7 +136,6 @@ const urlValidator = (e, requestDetails, headerSize, headerCt) => {
 		return false;
 
 	if (subtitlePref && e.category === "subtitles") return false;
-
 	if (filePref && e.category === "files") return false;
 
 	if (
@@ -184,40 +169,62 @@ const urlValidator = (e, requestDetails, headerSize, headerCt) => {
 	return true;
 };
 
+// ─── Main URL filter — called by webRequest listeners ─────────────────────
 const urlFilter = (requestDetails) => {
 	let ext;
 	let head;
 
-	const url = new URL(requestDetails.url).pathname.toLowerCase();
-	// check file extension and see if the url matches
-	ext =
-		customExtPref &&
-		customSupported.ext?.some((fe) => url.toLowerCase().includes("." + fe)) &&
-		customSupported;
-	if (!ext)
-		ext = supported.find((f) =>
-			f.ext?.some((fe) => url.toLowerCase().includes("." + fe))
-		);
+	const urlPath = new URL(requestDetails.url).pathname.toLowerCase();
 
-	// depends which listener caught it
+	// FIX [3]: MSS — dedicated path check, not fragile .ext substring
+	// Matches any URL with .ism/manifest or .isml/manifest in the path
+	const isMSS =
+		urlPath.includes(".ism/manifest") || urlPath.includes(".isml/manifest");
+
+	if (isMSS) {
+		ext = supported.find((f) => f.mssMatch === true);
+	}
+
+	// Custom extension check
+	if (!ext && customExtPref && customSupported.ext?.length > 0) {
+		const matchedCustomExt = customSupported.ext.some((fe) =>
+			urlPath.includes("." + fe.toLowerCase())
+		);
+		if (matchedCustomExt) ext = customSupported;
+	}
+
+	// Built-in extension check (skip MSS entries since handled above)
+	if (!ext) {
+		ext = supported.find(
+			(f) => !f.mssMatch && f.ext?.some((fe) => urlPath.includes("." + fe))
+		);
+	}
+
+	// Header detection
 	requestDetails.headers =
 		requestDetails.responseHeaders || requestDetails.requestHeaders;
 
 	const headerCt = requestDetails.headers?.find(
 		(h) => h.name.toLowerCase() === "content-type"
 	);
+
 	if (headerCt?.value) {
-		// check content type header and see if it matches
-		head =
-			customCtPref &&
-			customSupported?.ct?.some((fe) =>
+		// Custom CT check
+		if (customCtPref && customSupported.ct?.length > 0) {
+			const matchedCustomCt = customSupported.ct.some((fe) =>
 				headerCt.value.toLowerCase().includes(fe.toLowerCase())
-			) &&
-			customSupported;
-		if (!head)
-			head = supported.find((f) =>
-				f.ct?.some((fe) => headerCt.value.toLowerCase() === fe.toLowerCase())
 			);
+			if (matchedCustomCt) head = customSupported;
+		}
+
+		// Built-in CT check (exact match)
+		if (!head) {
+			head = supported.find((f) =>
+				f.ct?.some(
+					(fe) => headerCt.value.toLowerCase() === fe.toLowerCase()
+				)
+			);
+		}
 	}
 
 	const headerSize = requestDetails.headers?.find(
@@ -227,23 +234,25 @@ const urlFilter = (requestDetails) => {
 	const e = head || ext;
 
 	if (!urlValidator(e, requestDetails, headerSize, headerCt)) return;
+
 	queue.push(requestDetails.requestId);
 	requestDetails.type = e.type;
 	requestDetails.category = e.category;
 	addURL(requestDetails);
 };
 
+// ─── Store detected URL, notify, and relay to primedl ─────────────────────
 const addURL = async (requestDetails) => {
 	const url = new URL(requestDetails.url);
 
-	// MSS workaround
+	// MSS: strip the /manifest suffix to get the base stream URL
 	const urlPath = url.pathname.toLowerCase().includes(".ism/manifest")
-		? url.pathname.slice(0, url.pathname.lastIndexOf("/"))
+		? url.pathname.slice(0, url.pathname.toLowerCase().lastIndexOf("/manifest"))
 		: url.pathname;
 
-	const filename = +urlPath.lastIndexOf("/")
+	const filename = urlPath.lastIndexOf("/") > 0
 		? urlPath.slice(urlPath.lastIndexOf("/") + 1)
-		: urlPath[0] === "/"
+		: urlPath.startsWith("/")
 		? urlPath.slice(1)
 		: urlPath;
 
@@ -251,7 +260,16 @@ const addURL = async (requestDetails) => {
 
 	const tabData = await getTabData(requestDetails.tabId);
 
-	// web storage api optimization
+	// Slim down stored headers to only what's needed
+	const filteredHeaders = requestDetails.headers?.filter(
+		(h) =>
+			h.name.toLowerCase() === "user-agent" ||
+			h.name.toLowerCase() === "referer" ||
+			h.name.toLowerCase() === "cookie" ||
+			h.name.toLowerCase() === "set-cookie" ||
+			h.name.toLowerCase() === "content-length"
+	);
+
 	const newRequestDetails = {
 		category: requestDetails.category,
 		documentUrl: requestDetails.documentUrl,
@@ -262,157 +280,190 @@ const addURL = async (requestDetails) => {
 		timeStamp: requestDetails.timeStamp,
 		type: requestDetails.type,
 		url: requestDetails.url,
-		headers: requestDetails.headers?.filter(
-			(h) =>
-				h.name.toLowerCase() === "user-agent" ||
-				h.name.toLowerCase() === "referer" ||
-				h.name.toLowerCase() === "cookie" ||
-				h.name.toLowerCase() === "set-cookie" ||
-				h.name.toLowerCase() === "content-length"
-		),
+		headers: filteredHeaders ?? [],
 		filename,
 		hostname,
 		tabData: {
 			title: tabData?.title,
 			url: tabData?.url,
-			incognito: tabData?.incognito
-		}
+			incognito: tabData?.incognito,
+		},
 	};
 
 	const isExistingRequest = urlStorage.find(
 		(u) => u.requestId === requestDetails.requestId
 	);
+
 	if (!isExistingRequest) {
 		urlStorage.push(newRequestDetails);
-		chrome.browserAction.getBadgeText({}, (badgeText) =>
-			chrome.browserAction.setBadgeText({
-				text: (Number(badgeText) + 1).toString()
-			})
-		);
+		browserAction.getBadgeText({}, (badgeText) => {
+			browserAction.setBadgeText({
+				text: (Number(badgeText) + 1).toString(),
+			});
+		});
 	} else {
+		// Merge headers from the second listener hit (request + response)
+		const existingIndex = urlStorage.findIndex(
+			(u) => u.requestId === requestDetails.requestId
+		);
 		const mergedHeaders = [
-			...isExistingRequest.headers,
-			...newRequestDetails.headers
+			...urlStorage[existingIndex].headers,
+			...newRequestDetails.headers,
 		];
-
-		urlStorage[
-			urlStorage.findIndex((u) => u.requestId === requestDetails.requestId)
-		].headers = mergedHeaders;
+		urlStorage[existingIndex].headers = mergedHeaders;
 	}
 
-	// debounce lots of requests in a short period of time
+	// Debounce rapid batch detections into one notification
 	clearTimeout(requestTimeoutId);
 	allRequestDetails.push({
 		requestId: newRequestDetails.requestId,
 		filename: newRequestDetails.filename,
-		type: newRequestDetails.type
+		type: newRequestDetails.type,
 	});
 
 	requestTimeoutId = setTimeout(async () => {
 		await setStorage({ urlStorage });
-		chrome.runtime.sendMessage({ urlStorage: true }); // update popup if opened
+		chrome.runtime.sendMessage({ urlStorage: true }).catch(() => {});
 
+		// Clear processed batch from queue
 		allRequestDetails
 			.map((d) => d.requestId)
-			.forEach((id) => queue.splice(queue.indexOf(id, 1))); // remove all batched requests from queue
+			.forEach((id) => queue.splice(queue.indexOf(id), 1));
 
-		if (
-			!notifDetectPref &&
-			!notifPref &&
-			(!autoDownloadPref || (autoDownloadPref && filePref))
-		) {
-			if (allRequestDetails.length > 1)
-				// multiple files detected
+		// Show notification
+		if (!notifDetectPref && !notifPref && (!autoDownloadPref || (autoDownloadPref && filePref))) {
+			if (allRequestDetails.length > 1) {
 				chrome.notifications.create("add", {
-					// id = only one notification of this type appears at a time
 					type: "basic",
 					iconUrl: iconDark96,
 					title: _("notifManyTitle"),
 					message:
 						_("notifManyText") +
-						allRequestDetails.map((d) => d.filename).join(newline)
+						allRequestDetails.map((d) => d.filename).join(newline),
 				});
-			else
+			} else {
 				chrome.notifications.create("add", {
 					type: "basic",
 					iconUrl: iconDark96,
 					title: _("notifTitle"),
-					message: _("notifText", requestDetails.type) + filename
+					message: _("notifText", newRequestDetails.type) + filename,
 				});
+			}
 		}
 
-		allRequestDetails.length = 0; // clear array for next batch
+		allRequestDetails.length = 0;
 	}, 100);
 
-	// auto download file
+	// ─── FWD to primedl Rust server via WebSocket relay ───────────────────
+	if (primedlRelayEnabled !== false) {
+		// Get cookies asynchronously — don't block detection flow
+		const tabUrl = newRequestDetails.tabData?.url;
+		getCookiesForUrl(tabUrl).then((cookieData) => {
+			sendDetection({
+				url: newRequestDetails.url,
+				filename: newRequestDetails.filename,
+				type: newRequestDetails.type,
+				category: newRequestDetails.category,
+				site: newRequestDetails.hostname,
+				tabTitle: newRequestDetails.tabData?.title ?? "",
+				tabUrl: tabUrl ?? "",
+				timestamp: newRequestDetails.timeStamp,
+				headers: newRequestDetails.headers,
+				cookies: cookieData.netscape,
+				cookieHeader: cookieData.cookieHeader,
+			}).catch((e) => console.warn("[primedl/relay] sendDetection error:", e));
+		}).catch((e) => console.warn("[primedl/cookies] getCookiesForUrl error:", e));
+	}
+
+	// Auto-download non-manifest files if configured
 	if (
-		(newRequestDetails.category === "files" ||
-			newRequestDetails.category === "custom") &&
+		(newRequestDetails.category === "files" || newRequestDetails.category === "custom") &&
 		downloadDirectPref &&
 		autoDownloadPref
 	) {
-		const dlOptions = chrome.runtime
-			.getURL("")
-			.startsWith("chrome-extension://")
-			? {
-					filename: newRequestDetails.filename,
-					url: newRequestDetails.url,
-					saveAs: false
-			  }
+		const dlOptions = isChrome
+			? { filename: newRequestDetails.filename, url: newRequestDetails.url, saveAs: false }
 			: {
-					filename: newRequestDetails.filename,
-					headers:
-						newRequestDetails.headers?.filter(
-							(h) => h.name.toLowerCase() === "referer"
-						) || [],
-					incognito: newRequestDetails.tabData?.incognito || false,
-					url: newRequestDetails.url,
-					saveAs: false
-			  };
+				filename: newRequestDetails.filename,
+				headers: newRequestDetails.headers?.filter(
+					(h) => h.name.toLowerCase() === "referer"
+				) || [],
+				incognito: newRequestDetails.tabData?.incognito || false,
+				url: newRequestDetails.url,
+				saveAs: false,
+			};
 
 		chrome.downloads.download(dlOptions);
 	}
 };
 
+// ─── URL deletion (from popup/sidebar) ────────────────────────────────────
 const deleteURL = async (message) => {
-	// url deletion
 	if (message.previous !== true) {
 		urlStorage = urlStorage.filter(
 			(url) =>
-				!message.delete
-					.map((msgUrl) => msgUrl.requestId)
-					.includes(url.requestId)
+				!message.delete.map((u) => u.requestId).includes(url.requestId)
 		);
 	} else {
 		urlStorageRestore = urlStorageRestore.filter(
 			(url) =>
-				!message.delete
-					.map((msgUrl) => msgUrl.requestId)
-					.includes(url.requestId)
+				!message.delete.map((u) => u.requestId).includes(url.requestId)
 		);
 	}
-
 	await setStorage({ urlStorage });
 	await setStorage({ urlStorageRestore });
-	chrome.runtime.sendMessage({ urlStorage: true });
+	chrome.runtime.sendMessage({ urlStorage: true }).catch(() => {});
 };
 
+// ─── webRequest listener registration ─────────────────────────────────────
+const addListeners = () => {
+	chrome.webRequest.onBeforeSendHeaders.addListener(
+		urlFilter,
+		{ urls: ["<all_urls>"] },
+		isChrome ? ["requestHeaders", "extraHeaders"] : ["requestHeaders"]
+	);
+
+	chrome.webRequest.onHeadersReceived.addListener(
+		urlFilter,
+		{ urls: ["<all_urls>"] },
+		isChrome ? ["responseHeaders", "extraHeaders"] : ["responseHeaders"]
+	);
+};
+
+// ─── Initialisation ───────────────────────────────────────────────────────
+const init = async () => {
+	// Write missing defaults to storage
+	for (const option in defaults) {
+		if ((await getStorage(option)) === null) {
+			await setStorage({ [option]: defaults[option] });
+		}
+	}
+
+	// Reset filter state on every launch
+	await setStorage({ filterInput: "" });
+	await setStorage({ version: chrome.runtime.getManifest().version });
+
+	// Detect OS for correct newline
+	chrome.runtime.getPlatformInfo(async (info) => {
+		newline = info.os === "win" ? "\r\n" : "\n";
+		await setStorage({ newline });
+	});
+
+	browserAction.setBadgeBackgroundColor({ color: "green" });
+	browserAction.setBadgeText({ text: "" });
+
+	// Middle-click toolbar button → open popup in new tab
+	browserAction.onClicked.addListener((tab, onClickData) => {
+		if (onClickData?.button === 1) {
+			chrome.tabs.create({ url: "/popup.html" });
+		}
+	});
+
+	await updateVars();
+};
+
+// ─── Bootstrap ────────────────────────────────────────────────────────────
 (async () => {
-	// clear everything and/or set up
-
-	// cleanup for major updates
-	const manifestVersion = chrome.runtime.getManifest().version;
-	const addonVersion = await getStorage("version");
-	if (CLEAR_STORAGE && addonVersion && addonVersion !== manifestVersion)
-		await clearStorage();
-	//specifically for v2.11.2
-	if (
-		addonVersion &&
-		addonVersion !== manifestVersion &&
-		(await getStorage("noRestorePref"))
-	)
-		await setStorage({ noRestorePref: false });
-
 	await init();
 
 	if (disablePref !== true) {
@@ -420,66 +471,100 @@ const deleteURL = async (message) => {
 		updateIcons();
 	}
 
-	urlStorage = await getStorage("urlStorage");
-	urlStorageRestore = await getStorage("urlStorageRestore");
+	// Restore previous session URLs
+	urlStorage = (await getStorage("urlStorage")) ?? [];
+	urlStorageRestore = (await getStorage("urlStorageRestore")) ?? [];
 
-	// restore urls on startup
-	if (urlStorage && urlStorage.length > 0 && !noRestorePref) {
+	if (urlStorage.length > 0 && !noRestorePref) {
 		urlStorageRestore = [...urlStorageRestore, ...urlStorage];
-
-		// remove all entries previously detected in private windows
+		// Strip incognito entries — never persist those
 		urlStorageRestore = urlStorageRestore.filter(
 			(url) => url.tabData?.incognito !== true
 		);
-
 		await setStorage({ urlStorageRestore });
 	} else {
 		urlStorageRestore = [];
 		await setStorage({ urlStorageRestore });
 	}
-	// urls from previous session were moved to urlStorageRestore
+
 	urlStorage = [];
 	await setStorage({ urlStorage });
 
-	chrome.runtime.onMessage.addListener(async (message) => {
-		if (message.delete) deleteURL(message);
-		else if (message.options) {
-			await updateVars();
-			if (
-				disablePref === true &&
-				chrome.webRequest.onBeforeSendHeaders.hasListener(urlFilter) &&
-				chrome.webRequest.onHeadersReceived.hasListener(urlFilter)
-			) {
-				chrome.webRequest.onBeforeSendHeaders.removeListener(urlFilter);
-				chrome.webRequest.onHeadersReceived.removeListener(urlFilter);
-			} else if (
-				disablePref !== true &&
-				!chrome.webRequest.onBeforeSendHeaders.hasListener(urlFilter) &&
-				!chrome.webRequest.onHeadersReceived.hasListener(urlFilter)
-			) {
-				addListeners();
+	// ─── Message handler ─────────────────────────────────────────────────
+	chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+		(async () => {
+			if (message.delete) {
+				await deleteURL(message);
+			} else if (message.options) {
+				await updateVars();
+
+				if (
+					disablePref === true &&
+					chrome.webRequest.onBeforeSendHeaders.hasListener(urlFilter) &&
+					chrome.webRequest.onHeadersReceived.hasListener(urlFilter)
+				) {
+					chrome.webRequest.onBeforeSendHeaders.removeListener(urlFilter);
+					chrome.webRequest.onHeadersReceived.removeListener(urlFilter);
+				} else if (
+					disablePref !== true &&
+					!chrome.webRequest.onBeforeSendHeaders.hasListener(urlFilter) &&
+					!chrome.webRequest.onHeadersReceived.hasListener(urlFilter)
+				) {
+					addListeners();
+				}
+				updateIcons();
+			} else if (message.reset) {
+				await clearStorage();
+				urlStorage = [];
+				urlStorageRestore = [];
+				await init();
+				chrome.runtime.sendMessage({ options: true }).catch(() => {});
+			} else if (message.primedlReconnect) {
+				// Let popup trigger a relay reconnect
+				relayReconnect();
+			} else if (message.keepalive) {
+				// Keepalive ping from content script — just acknowledge
+				// The act of handling this message keeps the SW alive
 			}
-			updateIcons();
-		} else if (message.reset) {
-			await clearStorage();
-			urlStorage = [];
-			urlStorageRestore = [];
-			await init();
-			chrome.runtime.sendMessage({ options: true });
+
+			sendResponse({ ok: true });
+		})();
+		// Return true to keep the message channel open for async response
+		return true;
+	});
+
+	// ─── Keyboard commands ───────────────────────────────────────────────
+	chrome.commands.onCommand.addListener((cmd) => {
+		if (cmd === "open-popup") {
+			// chrome.action.openPopup() is only available in specific contexts
+			// Use tabs.create as reliable fallback
+			try {
+				browserAction.openPopup?.();
+			} catch {
+				chrome.tabs.create({ url: "/popup.html" });
+			}
+		}
+		// FIX [2]: sidebarAction is Firefox-only — guard before calling
+		if (cmd === "open-sidebar" && typeof chrome.sidebarAction !== "undefined") {
+			chrome.sidebarAction.open();
 		}
 	});
 
-	chrome.commands.onCommand.addListener((cmd) => {
-		if (cmd === "open-popup") chrome.browserAction.openPopup();
-		if (cmd === "open-sidebar") chrome.sidebarAction.open();
-	});
-
-	// workaround to detect popup close and manage badge text
+	// ─── FIX [4]: MV3 Service Worker keepalive port handler ──────────────
+	// Content script opens a port named "primedl-keepalive" every ~295s.
+	// Keeping the port connection alive prevents Chrome from killing the SW.
 	chrome.runtime.onConnect.addListener((port) => {
-		if (port.name === "popup")
+		if (port.name === "primedl-keepalive") {
+			// Keep a reference — port stays open until content script disconnects
 			port.onDisconnect.addListener(() => {
-				chrome.browserAction.setBadgeBackgroundColor({ color: "green" });
-				chrome.browserAction.setBadgeText({ text: "" });
+				// Port closed — content script will reconnect
 			});
+			// Popup-specific handling — clear badge on popup close
+		} else if (port.name === "popup") {
+			port.onDisconnect.addListener(() => {
+				browserAction.setBadgeBackgroundColor({ color: "green" });
+				browserAction.setBadgeText({ text: "" });
+			});
+		}
 	});
 })();

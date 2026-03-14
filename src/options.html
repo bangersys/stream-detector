@@ -1,40 +1,42 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<title>The Stream Detector</title>
+		<title>primedl — Options</title>
 		<link rel="stylesheet" href="css/options.css" />
 		<link rel="icon" href="favicon.ico" />
 	</head>
 	<body>
 		<table>
 			<tbody>
+
+				<!-- ── Detection ──────────────────────────────────────── -->
 				<tr>
-					<td><label for="disablePref" /></td>
+					<td><label for="disablePref"></label></td>
 					<td>
 						<input class="option" id="disablePref" type="checkbox" />
 					</td>
 				</tr>
 				<tr>
-					<td><label for="subtitlePref" /></td>
+					<td><label for="subtitlePref"></label></td>
 					<td>
 						<input class="option" id="subtitlePref" type="checkbox" />
 					</td>
 				</tr>
 				<tr>
-					<td><label for="filePref" /></td>
+					<td><label for="filePref"></label></td>
 					<td>
 						<input class="option" id="filePref" type="checkbox" />
 					</td>
 				</tr>
 				<tr>
-					<td><label for="downloadDirectPref" /></td>
+					<td><label for="downloadDirectPref"></label></td>
 					<td>
 						<input class="option" id="downloadDirectPref" type="checkbox" />
 					</td>
 				</tr>
 				<tr>
-					<td><label for="autoDownloadPref" /></td>
+					<td><label for="autoDownloadPref"></label></td>
 					<td>
 						<input class="option" id="autoDownloadPref" type="checkbox" />
 						<div class="tipContainer">
@@ -43,7 +45,7 @@
 					</td>
 				</tr>
 				<tr>
-					<td><label for="fileSizePref" /></td>
+					<td><label for="fileSizePref"></label></td>
 					<td>
 						<input class="option" id="fileSizePref" type="checkbox" />
 						<div style="display: inline">
@@ -58,7 +60,7 @@
 					</td>
 				</tr>
 				<tr>
-					<td><label for="manifestPref" /></td>
+					<td><label for="manifestPref"></label></td>
 					<td>
 						<input class="option" id="manifestPref" type="checkbox" />
 						<div class="tipContainer">
@@ -66,8 +68,10 @@
 						</div>
 					</td>
 				</tr>
+
+				<!-- ── Copy / Command ─────────────────────────────────── -->
 				<tr>
-					<td><label for="copyMethod" /></td>
+					<td><label for="copyMethod"></label></td>
 					<td>
 						<select class="option" id="copyMethod">
 							<option value="url"></option>
@@ -85,7 +89,7 @@
 					</td>
 				</tr>
 				<tr>
-					<td><label for="customCommandPref" /></td>
+					<td><label for="customCommandPref"></label></td>
 					<td>
 						<input class="option" id="customCommandPref" type="checkbox" />
 						<div style="display: inline">
@@ -99,13 +103,13 @@
 					</td>
 				</tr>
 				<tr>
-					<td><label for="userCommand" /></td>
+					<td><label for="userCommand"></label></td>
 					<td>
 						<input
 							class="option"
 							id="userCommand1"
 							type="text"
-							placeholder="usercmd.py %url%"
+							placeholder="usercmd %url%"
 						/>
 						<div class="tipContainer">
 							<span class="tip" id="userCommandTip">?</span>
@@ -113,29 +117,29 @@
 					</td>
 				</tr>
 				<tr>
-					<td />
+					<td></td>
 					<td>
 						<input
 							class="option"
 							id="userCommand2"
 							type="text"
-							placeholder="usercmd.py %url%"
+							placeholder="usercmd %url%"
 						/>
 					</td>
 				</tr>
 				<tr>
-					<td />
+					<td></td>
 					<td>
 						<input
 							class="option"
 							id="userCommand3"
 							type="text"
-							placeholder="usercmd.py %url%"
+							placeholder="usercmd %url%"
 						/>
 					</td>
 				</tr>
 				<tr>
-					<td><label for="regexCommandPref" /></td>
+					<td><label for="regexCommandPref"></label></td>
 					<td>
 						<input class="option" id="regexCommandPref" type="checkbox" />
 						&#47;&nbsp;<input
@@ -150,7 +154,7 @@
 					</td>
 				</tr>
 				<tr>
-					<td />
+					<td></td>
 					<td>
 						<input
 							class="option"
@@ -163,8 +167,10 @@
 						</div>
 					</td>
 				</tr>
+
+				<!-- ── Custom detection ───────────────────────────────── -->
 				<tr>
-					<td><label for="customExtPref" /></td>
+					<td><label for="customExtPref"></label></td>
 					<td>
 						<input class="option" id="customExtPref" type="checkbox" />
 						<textarea
@@ -178,7 +184,7 @@
 					</td>
 				</tr>
 				<tr>
-					<td><label for="customCtPref" /></td>
+					<td><label for="customCtPref"></label></td>
 					<td>
 						<input class="option" id="customCtPref" type="checkbox" />
 						<textarea
@@ -191,32 +197,34 @@
 						</div>
 					</td>
 				</tr>
+
+				<!-- ── Headers / Output ───────────────────────────────── -->
 				<tr>
-					<td><label for="headersPref" /></td>
+					<td><label for="headersPref"></label></td>
 					<td>
 						<input class="option" id="headersPref" type="checkbox" />
 					</td>
 				</tr>
 				<tr>
-					<td><label for="titlePref" /></td>
+					<td><label for="titlePref"></label></td>
 					<td>
 						<input class="option" id="titlePref" type="checkbox" />
 					</td>
 				</tr>
 				<tr>
-					<td><label for="filenamePref" /></td>
+					<td><label for="filenamePref"></label></td>
 					<td>
 						<input class="option" id="filenamePref" type="checkbox" />
 					</td>
 				</tr>
 				<tr>
-					<td><label for="timestampPref" /></td>
+					<td><label for="timestampPref"></label></td>
 					<td>
 						<input class="option" id="timestampPref" type="checkbox" />
 					</td>
 				</tr>
 				<tr>
-					<td><label for="fileExtension" /></td>
+					<td><label for="fileExtension"></label></td>
 					<td>
 						<select class="option" id="fileExtension">
 							<option value="ts">ts</option>
@@ -226,7 +234,7 @@
 					</td>
 				</tr>
 				<tr>
-					<td><label for="streamlinkOutput" /></td>
+					<td><label for="streamlinkOutput"></label></td>
 					<td>
 						<select class="option" id="streamlinkOutput">
 							<option value="file"></option>
@@ -235,7 +243,7 @@
 					</td>
 				</tr>
 				<tr>
-					<td><label for="downloaderPref" /></td>
+					<td><label for="downloaderPref"></label></td>
 					<td>
 						<input class="option" id="downloaderPref" type="checkbox" />
 						<div style="display: inline">
@@ -249,7 +257,7 @@
 					</td>
 				</tr>
 				<tr>
-					<td><label for="multithreadPref" /></td>
+					<td><label for="multithreadPref"></label></td>
 					<td>
 						<input class="option" id="multithreadPref" type="checkbox" />
 						<div style="display: inline">
@@ -264,7 +272,7 @@
 					</td>
 				</tr>
 				<tr>
-					<td><label for="proxyPref" /></td>
+					<td><label for="proxyPref"></label></td>
 					<td>
 						<input class="option" id="proxyPref" type="checkbox" />
 						<div style="display: inline">
@@ -277,8 +285,10 @@
 						</div>
 					</td>
 				</tr>
+
+				<!-- ── Blacklist ──────────────────────────────────────── -->
 				<tr>
-					<td><label for="blacklistPref" /></td>
+					<td><label for="blacklistPref"></label></td>
 					<td>
 						<input class="option" id="blacklistPref" type="checkbox" />
 						<textarea
@@ -291,14 +301,16 @@
 						</div>
 					</td>
 				</tr>
+
+				<!-- ── Session / Notifications ───────────────────────── -->
 				<tr>
-					<td><label for="noRestorePref" /></td>
+					<td><label for="noRestorePref"></label></td>
 					<td>
 						<input class="option" id="noRestorePref" type="checkbox" />
 					</td>
 				</tr>
 				<tr>
-					<td><label for="recentPref" /></td>
+					<td><label for="recentPref"></label></td>
 					<td>
 						<input class="option" id="recentPref" type="checkbox" />
 						<div style="display: inline">
@@ -313,33 +325,59 @@
 					</td>
 				</tr>
 				<tr>
-					<td><label for="notifDetectPref" /></td>
+					<td><label for="notifDetectPref"></label></td>
 					<td>
 						<input class="option" id="notifDetectPref" type="checkbox" />
 					</td>
 				</tr>
 				<tr>
-					<td><label for="notifPref" /></td>
+					<td><label for="notifPref"></label></td>
 					<td>
 						<input class="option" id="notifPref" type="checkbox" />
 					</td>
 				</tr>
+
+				<!-- ── primedl Relay ──────────────────────────────────── -->
 				<tr>
-					<td><label for="exportSettings" /></td>
+					<td><label for="primedlRelayEnabled">primedl relay:</label></td>
 					<td>
-						<button class="option" id="exportButton" type="button" />
-						<button class="option" id="importButton" type="button" />
+						<input class="option" id="primedlRelayEnabled" type="checkbox" />
 					</td>
 				</tr>
 				<tr>
-					<td><label for="resetButtonLabel" /></td>
+					<td><label for="primedlRelayPort">Relay port:</label></td>
 					<td>
-						<button class="option" id="resetButton" type="button" />
+						<input
+							class="option"
+							id="primedlRelayPort"
+							type="number"
+							min="1024"
+							max="65535"
+							value="7421"
+						/>
+					</td>
+				</tr>
+
+				<!-- ── Export / Import / Reset ───────────────────────── -->
+				<tr>
+					<td><label for="exportSettings"></label></td>
+					<td>
+						<button class="option" id="exportButton" type="button"></button>
+						<button class="option" id="importButton" type="button"></button>
 					</td>
 				</tr>
 				<tr>
-					<td id="versionContainer"><label for="versionTag" /></td>
+					<td><label for="resetButtonLabel"></label></td>
+					<td>
+						<button class="option" id="resetButton" type="button"></button>
+					</td>
 				</tr>
+
+				<!-- Version tag -->
+				<tr>
+					<td id="versionContainer"><label for="versionTag"></label></td>
+				</tr>
+
 			</tbody>
 		</table>
 

@@ -2,37 +2,41 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<title>The Stream Detector</title>
+		<title>primedl</title>
 		<link rel="stylesheet" href="css/sidebar.css" />
 		<link rel="icon" href="favicon.ico" />
 	</head>
 	<body id="sidebar">
 		<div id="container">
+
+			<!-- Tab selector -->
 			<table>
 				<tbody>
 					<tr>
 						<td>
 							<input class="option" type="radio" id="tabThis" name="tab" />
-							<label for="tabThis" />
+							<label for="tabThis"></label>
 						</td>
 						<td>
 							<input class="option" type="radio" id="tabAll" name="tab" />
-							<label for="tabAll" />
+							<label for="tabAll"></label>
 						</td>
 						<td>
 							<input class="option" type="radio" id="tabPrevious" name="tab" />
-							<label for="tabPrevious" />
+							<label for="tabPrevious"></label>
 						</td>
 					</tr>
 				</tbody>
 			</table>
+
+			<!-- Filter + copy method -->
 			<table>
 				<tbody>
 					<tr>
 						<td>
 							<label for="filterInput"></label>
 							<input class="option" type="text" id="filterInput" />
-							<a id="clearFilterInput">✖</a>
+							<a id="clearFilterInput" role="button" tabindex="0">✖</a>
 						</td>
 						<td>
 							<label for="copyMethod"></label>
@@ -55,6 +59,8 @@
 					</tr>
 				</tbody>
 			</table>
+
+			<!-- URL list -->
 			<div id="urlList">
 				<table>
 					<colgroup>
@@ -63,38 +69,40 @@
 					</colgroup>
 					<thead id="headers">
 						<tr>
-							<th><label for="popupFilename" /></th>
+							<th><label for="popupFilename"></label></th>
 							<th>✖</th>
 						</tr>
 					</thead>
-					<tbody id="popupUrlList" />
+					<tbody id="popupUrlList"></tbody>
 				</table>
 			</div>
+
+			<!-- Bottom bar -->
 			<table>
 				<tbody>
 					<tr>
 						<td>
 							<input class="option" id="disablePref" type="checkbox" />
-							<label for="disablePref" />
+							<label for="disablePref"></label>
 						</td>
 						<td>
-							<button id="copyAll">
-								<label for="copyAll" />
-							</button>
+							<button id="copyAll"><label for="copyAll"></label></button>
 						</td>
 						<td>
-							<button id="clearList">
-								<label for="clearList" />
-							</button>
+							<button id="clearList"><label for="clearList"></label></button>
 						</td>
 						<td>
-							<button id="openOptions">
-								<label for="openOptions" />
-							</button>
+							<button id="openOptions"><label for="openOptions"></label></button>
 						</td>
 					</tr>
 				</tbody>
 			</table>
+
+			<!-- primedl relay status -->
+			<div id="primedlStatusBar">
+				<span id="primedlStatus" class="relay-disconnected">○ primedl offline</span>
+			</div>
+
 		</div>
 
 		<script type="module" src="js/popup.js"></script>

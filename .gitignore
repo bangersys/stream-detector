@@ -1,7 +1,8 @@
-/dist
-/dist-chrome
-/node_modules
-/.parcel-cache
-/src/manifest.json
-.firefox.exe.lnk
-icon.svg
+node_modules/
+dist/
+dist-chrome/
+*.zip
+bun.lockb
+.DS_Store
+Thumbs.db
+*.log

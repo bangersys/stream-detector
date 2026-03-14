@@ -1,6 +1,6 @@
 {
-	"name": "The Stream Detector",
-	"version": "2.11.7",
+	"name": "primedl",
+	"version": "1.0.0",
 	"description": "__MSG_extText__",
 	"manifest_version": 2,
 	"default_locale": "en",
@@ -11,7 +11,10 @@
 		"notifications",
 		"storage",
 		"tabs",
-		"webRequest"
+		"webRequest",
+		"webNavigation",
+		"cookies",
+		"scripting"
 	],
 	"background": {
 		"scripts": ["js/background.js"],
@@ -34,7 +37,7 @@
 		"page": "options.html"
 	},
 	"browser_action": {
-		"default_title": "The Stream Detector",
+		"default_title": "primedl",
 		"default_popup": "popup.html",
 		"default_icon": {
 			"16": "img/icon-dark-16.png",
@@ -59,12 +62,19 @@
 		]
 	},
 	"sidebar_action": {
-		"default_title": "The Stream Detector",
+		"default_title": "primedl",
 		"default_panel": "sidebar.html",
 		"default_icon": {
 			"16": "img/icon-dark-16.png",
 			"48": "img/icon-dark-48.png"
 		},
 		"open_at_install": false
-	}
+	},
+	"content_scripts": [
+		{
+			"matches": ["*://*/*"],
+			"js": ["content/keepalive.js"],
+			"run_at": "document_idle"
+		}
+	]
 }

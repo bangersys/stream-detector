@@ -21,6 +21,7 @@ body {
 	display: flex;
 	flex-direction: column;
 	min-height: 0;
+	width: 100%;
 }
 
 #urlList {
@@ -75,6 +76,26 @@ th * {
 	text-overflow: initial;
 }
 
+.urlSource {
+	display: block;
+	font-size: 0.85em;
+	opacity: 0.65;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.urlFilename {
+	display: block;
+	font-weight: 600;
+}
+
+.urlInfo {
+	display: block;
+	font-size: 0.8em;
+	opacity: 0.55;
+}
+
 input,
 select {
 	margin: auto 0.25em;
@@ -92,6 +113,23 @@ a {
 
 #clearFilterInput {
 	text-decoration: none;
+	cursor: pointer;
+}
+
+/* primedl relay status bar */
+#primedlStatusBar {
+	padding: 3px 8px;
+	text-align: right;
+	font-size: 0.75em;
+	border-top: 1px solid gainsboro;
+}
+
+.relay-connected {
+	color: #2a7a2a;
+}
+
+.relay-disconnected {
+	color: #999;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -102,6 +140,19 @@ a {
 
 	.urlEntry:hover,
 	.urlEntry:focus-within {
-		color: #232323;
+		background-color: #3a3a3f;
+		color: #fff;
+	}
+
+	#primedlStatusBar {
+		border-top-color: #3a3a3f;
+	}
+
+	.relay-connected {
+		color: #5cb85c;
+	}
+
+	.relay-disconnected {
+		color: #666;
 	}
 }

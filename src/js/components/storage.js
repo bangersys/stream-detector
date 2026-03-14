@@ -1,3 +1,8 @@
+/**
+ * primedl — storage.js
+ * Thin wrappers around chrome.storage.local with Promise API.
+ */
+
 export const getStorage = async (key) =>
 	new Promise((resolve) =>
 		chrome.storage.local.get(key, (value) => {
@@ -23,7 +28,11 @@ const removeStorage = async (key) =>
 export const clearStorage = async () =>
 	new Promise((resolve) => chrome.storage.local.clear(() => resolve()));
 
-export const saveOptionStorage = async (e, options) => {
+/**
+ * Save a single option from an HTML input/select/textarea change event.
+ * Also accepts an optional `options` NodeList for radio group handling.
+ */
+export const saveOptionStorage = async (e, options = []) => {
 	if (
 		e.target.id === "copyMethod" &&
 		e.target.value !== "url" &&
@@ -32,38 +41,38 @@ export const saveOptionStorage = async (e, options) => {
 		!e.target.value.startsWith("user")
 	) {
 		const prefName = "customCommand" + e.target.value;
-
 		if (await getStorage(prefName))
 			document.getElementById("customCommand").value =
 				(await getStorage(prefName)) || "";
 	}
 
-	if (e.target.id === "regexCommand")
+	if (e.target.id === "regexCommand") {
 		await setStorage({ [e.target.id]: e.target.value });
-	else if (e.target.id === "customCommand")
+	} else if (e.target.id === "customCommand") {
 		await setStorage({
 			[e.target.id + document.getElementById("copyMethod").value]:
-				e.target.value?.trim()
+				e.target.value?.trim(),
 		});
-	else if (e.target.tagName.toLowerCase() === "textarea")
+	} else if (e.target.tagName.toLowerCase() === "textarea") {
 		await setStorage({
-			[e.target.id]: e.target.value?.split("\n").filter((ee) => ee)
+			[e.target.id]: e.target.value?.split("\n").filter((ee) => ee),
 		});
-	else if (e.target.type === "checkbox")
+	} else if (e.target.type === "checkbox") {
 		await setStorage({ [e.target.id]: e.target.checked });
-	else if (e.target.type === "text" && e.target.value?.trim().length === 0)
+	} else if (e.target.type === "text" && e.target.value?.trim().length === 0) {
 		await removeStorage(e.target.id);
-	else if (e.target.type === "radio" && options.length > 0) {
-		// update entire radio group
+	} else if (e.target.type === "radio" && options.length > 0) {
 		for (const option of options) {
 			if (option.name === e.target.name) {
 				await setStorage({
-					[option.id]: document.getElementById(option.id).checked
+					[option.id]: document.getElementById(option.id).checked,
 				});
 			}
 		}
-	} else await setStorage({ [e.target.id]: e.target.value?.trim() });
+	} else {
+		await setStorage({ [e.target.id]: e.target.value?.trim() });
+	}
 
-	// update other scripts as well
+	// Notify other extension pages (popup, sidebar, options) of the change
 	chrome.runtime.sendMessage({ options: true });
 };

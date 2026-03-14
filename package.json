@@ -1,35 +1,26 @@
 {
-	"name": "stream-detector",
-	"author": {
-		"name": "54ac",
-		"email": "me@54ac.bio",
-		"url": "https://github.com/54ac"
-	},
-	"repository": "github:54ac/stream-detector",
-	"version": "1.0.0",
-	"type": "module",
-	"private": true,
-	"devDependencies": {
-		"@babel/eslint-parser": "^7.18.9",
-		"@babel/eslint-plugin": "^7.19.1",
-		"@parcel/babel-preset-env": "^2.8.3",
-		"@parcel/config-webextension": "^2.8.3",
-		"cpy-cli": "^5.0.0",
-		"eslint": "^8.21.0",
-		"eslint-config-prettier": "^8.5.0",
-		"eslint-plugin-prettier": "^4.2.1",
-		"parcel": "^2.8.3",
-		"prettier": "^3.0.0",
-		"rimraf": "^5.0.0",
-		"stylelint": "^15.0.0",
-		"stylelint-config-recommended": "^13.0.0",
-		"stylelint-config-standard": "^34.0.0"
-	},
-	"scripts": {
-		"build": "npm run build-firefox && npm run build-chrome",
-		"build-firefox": "cpy -u 1 src/manifest-firefox.json . --rename=manifest.json && rimraf dist && parcel build src/manifest.json --config @parcel/config-webextension --no-source-maps && rimraf src/manifest.json",
-		"build-chrome": "cpy -u 1 src/manifest-chrome.json . --rename=manifest.json && rimraf dist-chrome && parcel build src/manifest.json --config @parcel/config-webextension --no-source-maps --dist-dir=dist-chrome && rimraf src/manifest.json",
-		"start": "cpy -u 1 src/manifest-firefox.json . --rename=manifest.json && rimraf dist && parcel watch src/manifest.json --host localhost --config @parcel/config-webextension && rimraf src/manifest.json"
-	},
-	"browserslist": "firefox 89"
+  "name": "primedl-extension",
+  "displayName": "primedl",
+  "author": {
+    "name": "primedl",
+    "url": "https://github.com/primedl"
+  },
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@biomejs/biome": "2.4.7"
+  },
+  "scripts": {
+    "build": "bun run scripts/build.ts --all",
+    "build:firefox": "bun run scripts/build.ts --firefox",
+    "build:chrome": "bun run scripts/build.ts --chrome",
+    "dev": "bun run scripts/build.ts --firefox --watch",
+    "dev:chrome": "bun run scripts/build.ts --chrome --watch",
+    "lint": "biome lint src/",
+    "lint:fix": "biome lint --write src/",
+    "fmt": "biome format --write src/",
+    "check": "biome check --write src/",
+    "ci": "biome ci src/"
+  }
 }

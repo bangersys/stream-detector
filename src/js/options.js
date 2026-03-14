@@ -1,133 +1,188 @@
+/**
+ * primedl — options.js
+ * Options page logic. Reads/writes all preferences via chrome.storage.local.
+ */
+
 import {
 	saveOptionStorage,
 	getStorage,
 	getAllStorage,
-	setStorage
+	setStorage,
 } from "./components/storage.js";
 
-const _ = chrome.i18n.getMessage; // i18n
+const _ = chrome.i18n.getMessage;
 
+// ─── Regex validator ──────────────────────────────────────────────────────
+const regexValidator = () => {
+	const input = document.getElementById("regexCommand");
+	const warning = document.getElementById("regexWarning");
+	if (!input || !warning) return;
+	try {
+		new RegExp(input.value);
+		warning.style.display = "none";
+	} catch {
+		warning.style.display = "unset";
+	}
+};
+
+// ─── Restore all option values from storage ───────────────────────────────
 const restoreOptions = async () => {
 	const options = document.getElementsByClassName("option");
 	for (const option of options) {
 		if (option.id === "customCommand") {
-			const prefName = option.id + document.getElementById("copyMethod").value;
-			document.getElementById(option.id).value =
+			const prefName = `customCommand${document.getElementById("copyMethod").value}`;
+			document.getElementById("customCommand").value =
 				(await getStorage(prefName)) || "";
 		} else if (option.id === "regexCommand") {
-			document.getElementById("regexCommand").value = await getStorage(
-				"regexCommand"
-			);
+			document.getElementById("regexCommand").value =
+				(await getStorage("regexCommand")) ?? "";
 			regexValidator();
 		} else if (option.tagName.toLowerCase() === "textarea") {
-			if (await getStorage(option.id)) {
-				const textareaValue = await getStorage(option.id);
-				if (textareaValue !== null)
-					document.getElementById(option.id).value = textareaValue.join("\n");
+			const val = await getStorage(option.id);
+			if (val !== null) {
+				document.getElementById(option.id).value = val.join("\n");
 			}
-		} else if ((await getStorage(option.id)) !== null) {
-			if (
-				document.getElementById(option.id).type === "checkbox" ||
-				document.getElementById(option.id).type === "radio"
-			) {
-				document.getElementById(option.id).checked = await getStorage(
-					option.id
-				);
-			} else {
-				document.getElementById(option.id).value = await getStorage(option.id);
+		} else {
+			const val = await getStorage(option.id);
+			if (val !== null) {
+				const el = document.getElementById(option.id);
+				if (el.type === "checkbox" || el.type === "radio") {
+					el.checked = val;
+				} else {
+					el.value = val;
+				}
 			}
 		}
 	}
 };
 
-const regexValidator = () => {
-	try {
-		new RegExp(document.getElementById("regexCommand").value);
-		document.getElementById("regexWarning").style.display = "none";
-	} catch {
-		document.getElementById("regexWarning").style.display = "unset";
+// ─── i18n: fill all labels, options, tooltips, buttons ───────────────────
+const applyI18n = async () => {
+	const labels = document.getElementsByTagName("label");
+	for (const label of labels) {
+		if (label.htmlFor === "versionTag") {
+			const ver = await getStorage("version");
+			label.textContent = `v${ver}. ${_("tipHint")}`;
+		} else if (label.htmlFor) {
+			const msg = _(label.htmlFor);
+			if (msg) label.textContent = `${msg}:`;
+		}
+	}
+
+	const selectOptions = document.getElementsByTagName("option");
+	for (const opt of selectOptions) {
+		if (!opt.textContent) {
+			const msg = _(opt.value);
+			if (msg) opt.textContent = msg;
+		}
+	}
+
+	// Tooltip spans — hover title on parent element
+	const spans = document.getElementsByTagName("span");
+	for (const span of spans) {
+		if (span.id) {
+			const msg = _(span.id);
+			if (msg) span.parentElement.title = msg;
+		}
+	}
+
+	const buttons = document.getElementsByTagName("button");
+	for (const btn of buttons) {
+		if (btn.id) {
+			const msg = _(btn.id);
+			if (msg) btn.textContent = msg;
+		}
 	}
 };
 
+// ─── Boot ─────────────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async () => {
 	const options = document.getElementsByClassName("option");
+
+	// Wire up all option change handlers
 	for (const option of options) {
-		if (option.id === "regexCommand") option.oninput = () => regexValidator();
-		if (option.type !== "button") option.onchange = (e) => saveOptionStorage(e);
+		if (option.id === "regexCommand") {
+			option.oninput = () => regexValidator();
+		}
+		if (option.type !== "button") {
+			option.onchange = (e) =>
+				saveOptionStorage(e, document.getElementsByClassName("option"));
+		}
 	}
 
-	// buttons
-	document.getElementById("exportButton").onclick = async () => {
+	// ── Export settings ────────────────────────────────────────────────────
+	document.getElementById("exportButton")?.addEventListener("click", async () => {
 		const allStorage = await getAllStorage();
+
+		// Strip non-setting keys
 		delete allStorage.urlStorage;
 		delete allStorage.urlStorageRestore;
 		delete allStorage.version;
 		delete allStorage.newline;
+		delete allStorage.filterInput;
 
-		const settingsBlob = new Blob([JSON.stringify(allStorage)], {
-			type: "application/json"
+		const blob = new Blob([JSON.stringify(allStorage, null, 2)], {
+			type: "application/json",
 		});
-		const settingsFile = document.createElement("a");
-		settingsFile.href = URL.createObjectURL(settingsBlob);
-		settingsFile.download = `stream-detector-settings-${Date.now()}.json`;
-		settingsFile.click();
-		URL.revokeObjectURL(settingsBlob);
-		settingsFile.remove();
-	};
-	document.getElementById("importButton").onclick = () => {
-		const settingsFile = document.createElement("input");
-		settingsFile.type = "file";
-		settingsFile.accept = ".json";
+		const a = document.createElement("a");
+		a.href = URL.createObjectURL(blob);
+		a.download = `primedl-settings-${Date.now()}.json`;
+		a.click();
+		URL.revokeObjectURL(a.href);
+		a.remove();
+	});
 
-		settingsFile.onchange = () => {
-			const settingsReader = new FileReader();
-			const [file] = settingsFile.files;
+	// ── Import settings ────────────────────────────────────────────────────
+	document.getElementById("importButton")?.addEventListener("click", () => {
+		const input = document.createElement("input");
+		input.type = "file";
+		input.accept = ".json";
 
-			settingsReader.onload = () => {
+		input.onchange = () => {
+			const reader = new FileReader();
+			const [file] = input.files;
+
+			reader.onload = () => {
+				let parsed;
 				try {
-					JSON.parse(settingsReader.result);
+					parsed = JSON.parse(reader.result);
 				} catch {
 					window.alert(_("importButtonFailure"));
+					input.remove();
+					return;
 				}
-				setStorage(JSON.parse(settingsReader.result));
+				setStorage(parsed);
 				restoreOptions();
 				chrome.runtime.sendMessage({ options: true });
-				settingsFile.remove();
+				input.remove();
 			};
-			if (file) settingsReader.readAsText(file);
+
+			if (file) reader.readAsText(file);
 		};
-		settingsFile.click();
-	};
 
-	document.getElementById("resetButton").onclick = () =>
-		window.confirm(_("resetButtonConfirm")) &&
-		chrome.runtime.sendMessage({ reset: true });
+		input.click();
+	});
 
-	restoreOptions();
+	// ── Reset ──────────────────────────────────────────────────────────────
+	document.getElementById("resetButton")?.addEventListener("click", () => {
+		if (window.confirm(_("resetButtonConfirm"))) {
+			chrome.runtime.sendMessage({ reset: true });
+		}
+	});
 
-	// i18n
-	const labels = document.getElementsByTagName("label");
-	for (const label of labels) {
-		if (label.htmlFor === "versionTag")
-			label.textContent = `v${await getStorage("version")}. ${_("tipHint")}`;
-		else label.textContent = _(label.htmlFor) + ":";
-	}
-	const selectOptions = document.getElementsByTagName("option");
-	for (const selectOption of selectOptions) {
-		if (!selectOption.textContent)
-			selectOption.textContent = _(selectOption.value);
-	}
-	const spans = document.getElementsByTagName("span");
-	for (const span of spans) {
-		// mouseover tooltip
-		span.parentElement.title = _(span.id);
-	}
-	const buttons = document.getElementsByTagName("button");
-	for (const button of buttons) {
-		button.textContent = _(button.id);
-	}
+	// ── Relay port live update ────────────────────────────────────────────
+	document.getElementById("primedlRelayPort")?.addEventListener("change", async (e) => {
+		const port = parseInt(e.target.value, 10);
+		if (port >= 1024 && port <= 65535) {
+			await setStorage({ primedlRelayPort: port });
+			chrome.runtime.sendMessage({ options: true });
+		}
+	});
 
-	// sync with popup changes
+	await restoreOptions();
+	await applyI18n();
+
+	// Sync live changes from popup/sidebar
 	chrome.runtime.onMessage.addListener((message) => {
 		if (message.options) restoreOptions();
 	});
