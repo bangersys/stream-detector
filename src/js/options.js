@@ -3,12 +3,7 @@
  * Options page logic. Reads/writes all preferences via chrome.storage.local.
  */
 
-import {
-	saveOptionStorage,
-	getStorage,
-	getAllStorage,
-	setStorage,
-} from "./components/storage.js";
+import { getAllStorage, getStorage, saveOptionStorage, setStorage } from "./components/storage.js";
 
 const _ = chrome.i18n.getMessage;
 
@@ -31,11 +26,9 @@ const restoreOptions = async () => {
 	for (const option of options) {
 		if (option.id === "customCommand") {
 			const prefName = `customCommand${document.getElementById("copyMethod").value}`;
-			document.getElementById("customCommand").value =
-				(await getStorage(prefName)) || "";
+			document.getElementById("customCommand").value = (await getStorage(prefName)) || "";
 		} else if (option.id === "regexCommand") {
-			document.getElementById("regexCommand").value =
-				(await getStorage("regexCommand")) ?? "";
+			document.getElementById("regexCommand").value = (await getStorage("regexCommand")) ?? "";
 			regexValidator();
 		} else if (option.tagName.toLowerCase() === "textarea") {
 			const val = await getStorage(option.id);
@@ -105,8 +98,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 			option.oninput = () => regexValidator();
 		}
 		if (option.type !== "button") {
-			option.onchange = (e) =>
-				saveOptionStorage(e, document.getElementsByClassName("option"));
+			option.onchange = (e) => saveOptionStorage(e, document.getElementsByClassName("option"));
 		}
 	}
 
@@ -122,7 +114,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 		delete allStorage.filterInput;
 
 		const blob = new Blob([JSON.stringify(allStorage, null, 2)], {
-			type: "application/json",
+			type: "application/json"
 		});
 		const a = document.createElement("a");
 		a.href = URL.createObjectURL(blob);

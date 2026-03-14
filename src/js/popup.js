@@ -8,16 +8,11 @@
  *   [3] chrome.action compat shim
  */
 
-import {
-	saveOptionStorage,
-	getStorage,
-	setStorage,
-} from "./components/storage.js";
-
 import notifIcon from "../img/icon-dark-96.png";
+import { getStorage, saveOptionStorage, setStorage } from "./components/storage.js";
 
 // FIX [3]: MV3/MV2 action compat
-const browserAction = chrome.action ?? chrome.browserAction;
+const _browserAction = chrome.action ?? chrome.browserAction;
 const isChrome = chrome.runtime.getURL("").startsWith("chrome-extension://");
 
 const _ = chrome.i18n.getMessage;
@@ -25,13 +20,13 @@ const _ = chrome.i18n.getMessage;
 const table = document.getElementById("popupUrlList");
 
 let titlePref;
-let filenamePref;
-let timestampPref;
+let _filenamePref;
+let _timestampPref;
 let downloadDirectPref;
 let newline;
 let recentPref;
 let recentAmount;
-let noRestorePref;
+let _noRestorePref;
 let urlList = [];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -51,11 +46,10 @@ const downloadURL = (file) => {
 	const dlOptions = isChrome
 		? { url: file.url }
 		: {
-			headers:
-				file.headers?.filter((h) => h.name.toLowerCase() === "referer") || [],
-			incognito: file.tabData?.incognito || false,
-			url: file.url,
-		};
+				headers: file.headers?.filter((h) => h.name.toLowerCase() === "referer") || [],
+				incognito: file.tabData?.incognito || false,
+				url: file.url
+			};
 
 	chrome.downloads.download(dlOptions, (err) => {
 		if (err === undefined) {
@@ -63,7 +57,7 @@ const downloadURL = (file) => {
 				type: "basic",
 				iconUrl: notifIcon,
 				title: _("notifDownErrorTitle"),
-				message: _("notifDownErrorText") + file.filename,
+				message: _("notifDownErrorText") + file.filename
 			});
 		}
 	});
@@ -81,7 +75,7 @@ const copyURL = async (info) => {
 		// Don't use user-defined command if it's empty
 		if (
 			fileMethod.startsWith("user") &&
-			(await getStorage("userCommand" + fileMethod.at(-1))) === null
+			(await getStorage(`userCommand${fileMethod.at(-1)}`)) === null
 		) {
 			fileMethod = "url";
 			methodIncomp = true;
@@ -107,10 +101,10 @@ const copyURL = async (info) => {
 			code = "streamlink";
 		} else if (fileMethod === "ytdlp") {
 			code = "yt-dlp --no-part --restrict-filenames";
-			if (await getStorage("multithreadPref") && await getStorage("multithreadAmount")) {
+			if ((await getStorage("multithreadPref")) && (await getStorage("multithreadAmount"))) {
 				code += ` -N ${await getStorage("multithreadAmount")}`;
 			}
-			if (await getStorage("downloaderPref") && await getStorage("downloaderCommand")) {
+			if ((await getStorage("downloaderPref")) && (await getStorage("downloaderCommand"))) {
 				code += ` --downloader "${await getStorage("downloaderCommand")}"`;
 			}
 		} else if (fileMethod === "hlsdl") {
@@ -118,17 +112,17 @@ const copyURL = async (info) => {
 		} else if (fileMethod === "nm3u8dl") {
 			code = `N_m3u8DL-RE "${streamURL}"`;
 		} else if (fileMethod.startsWith("user")) {
-			code = await getStorage("userCommand" + fileMethod.at(-1));
+			code = await getStorage(`userCommand${fileMethod.at(-1)}`);
 		}
 
 		// ── Custom extra params ────────────────────────────────────────────
 		const prefName = `customCommand${fileMethod}`;
-		if (await getStorage("customCommandPref") && await getStorage(prefName)) {
+		if ((await getStorage("customCommandPref")) && (await getStorage(prefName))) {
 			code += ` ${await getStorage(prefName)}`;
 		}
 
 		// ── Proxy ─────────────────────────────────────────────────────────
-		if (await getStorage("proxyPref") && await getStorage("proxyCommand")) {
+		if ((await getStorage("proxyPref")) && (await getStorage("proxyCommand"))) {
 			const proxy = await getStorage("proxyCommand");
 			if (fileMethod === "ffmpeg") code += ` -http_proxy "${proxy}"`;
 			else if (fileMethod === "streamlink") code += ` --http-proxy "${proxy}"`;
@@ -140,14 +134,11 @@ const copyURL = async (info) => {
 
 		// ── Headers ───────────────────────────────────────────────────────
 		if (await getStorage("headersPref")) {
-			let headerUserAgent = e.headers?.find(
-				(h) => h.name.toLowerCase() === "user-agent"
-			)?.value ?? navigator.userAgent;
+			const headerUserAgent =
+				e.headers?.find((h) => h.name.toLowerCase() === "user-agent")?.value ?? navigator.userAgent;
 
 			let headerCookieRaw = e.headers?.find(
-				(h) =>
-					h.name.toLowerCase() === "cookie" ||
-					h.name.toLowerCase() === "set-cookie"
+				(h) => h.name.toLowerCase() === "cookie" || h.name.toLowerCase() === "set-cookie"
 			)?.value;
 
 			// Double quotes break shell commands — replace with single
@@ -155,32 +146,22 @@ const copyURL = async (info) => {
 				headerCookieRaw = headerCookieRaw.replace(/"/g, "'");
 			}
 
-			let headerReferer = e.headers?.find(
-				(h) => h.name.toLowerCase() === "referer"
-			)?.value
-				?? (e.originUrl || e.documentUrl || e.initiator || e.tabData?.url);
+			let headerReferer =
+				e.headers?.find((h) => h.name.toLowerCase() === "referer")?.value ??
+				(e.originUrl || e.documentUrl || e.initiator || e.tabData?.url);
 
-			if (
-				headerReferer?.startsWith("about:") ||
-				headerReferer?.startsWith("chrome:")
-			) {
+			if (headerReferer?.startsWith("about:") || headerReferer?.startsWith("chrome:")) {
 				headerReferer = undefined;
 			}
 
 			if (headerUserAgent) {
-				if (fileMethod === "kodiUrl")
-					code += `|User-Agent=${encodeURIComponent(headerUserAgent)}`;
-				else if (fileMethod === "ffmpeg")
-					code += ` -user_agent "${headerUserAgent}"`;
-				else if (fileMethod === "streamlink")
-					code += ` --http-header "User-Agent=${headerUserAgent}"`;
-				else if (fileMethod === "ytdlp")
-					code += ` --user-agent "${headerUserAgent}"`;
+				if (fileMethod === "kodiUrl") code += `|User-Agent=${encodeURIComponent(headerUserAgent)}`;
+				else if (fileMethod === "ffmpeg") code += ` -user_agent "${headerUserAgent}"`;
+				else if (fileMethod === "streamlink") code += ` --http-header "User-Agent=${headerUserAgent}"`;
+				else if (fileMethod === "ytdlp") code += ` --user-agent "${headerUserAgent}"`;
 				else if (fileMethod === "hlsdl") code += ` -u "${headerUserAgent}"`;
-				else if (fileMethod === "nm3u8dl")
-					code += ` --header "User-Agent: ${headerUserAgent}"`;
-				else if (fileMethod.startsWith("user"))
-					code = code.replace(/%useragent%/g, headerUserAgent);
+				else if (fileMethod === "nm3u8dl") code += ` --header "User-Agent: ${headerUserAgent}"`;
+				else if (fileMethod.startsWith("user")) code = code.replace(/%useragent%/g, headerUserAgent);
 			} else if (fileMethod.startsWith("user")) {
 				code = code.replace(/%useragent%/g, "");
 			}
@@ -204,9 +185,7 @@ const copyURL = async (info) => {
 				}
 			} else if (fileMethod === "ytdlp") {
 				// No cookie header captured — try to pull from browser
-				code += isChrome
-					? " --cookies-from-browser chrome"
-					: " --cookies-from-browser firefox";
+				code += isChrome ? " --cookies-from-browser chrome" : " --cookies-from-browser firefox";
 			} else if (fileMethod.startsWith("user")) {
 				code = code.replace(/%cookie%/g, "");
 			}
@@ -281,7 +260,7 @@ const copyURL = async (info) => {
 		}
 
 		// ── Regex substitution for user commands ──────────────────────────
-		if (fileMethod.startsWith("user") && await getStorage("regexCommandPref")) {
+		if (fileMethod.startsWith("user") && (await getStorage("regexCommandPref"))) {
 			const regexCommand = await getStorage("regexCommand");
 			const regexReplace = await getStorage("regexReplace");
 			if (regexCommand) {
@@ -304,9 +283,8 @@ const copyURL = async (info) => {
 				iconUrl: notifIcon,
 				title: _("notifCopiedTitle"),
 				message:
-					(list.methodIncomp
-						? _("notifIncompCopiedText")
-						: _("notifCopiedText")) + list.filenames.join(newline),
+					(list.methodIncomp ? _("notifIncompCopiedText") : _("notifCopiedText")) +
+					list.filenames.join(newline)
 			});
 		}
 	} catch (err) {
@@ -315,7 +293,7 @@ const copyURL = async (info) => {
 			type: "basic",
 			iconUrl: notifIcon,
 			title: _("notifErrorTitle"),
-			message: _("notifErrorText") + list.filenames.join(newline),
+			message: _("notifErrorText") + list.filenames.join(newline)
 		});
 	}
 };
@@ -334,9 +312,7 @@ const insertList = (urls) => {
 		const cellName = row.insertCell();
 		const cellDel = row.insertCell();
 
-		const contentSize = e.headers?.find(
-			(h) => h.name.toLowerCase() === "content-length"
-		)?.value;
+		const contentSize = e.headers?.find((h) => h.name.toLowerCase() === "content-length")?.value;
 
 		const source = titlePref && e.tabData?.title ? e.tabData.title : e.hostname;
 
@@ -345,7 +321,7 @@ const insertList = (urls) => {
 			<span class="urlFilename">${e.filename}</span>
 			<span class="urlInfo">
 				${e.type}
-				${contentSize ? " · " + formatBytes(Number(contentSize)) : ""}
+				${contentSize ? ` · ${formatBytes(Number(contentSize))}` : ""}
 				· ${getTimestamp(e.timeStamp)}
 			</span>
 		`;
@@ -383,13 +359,9 @@ const createList = async () => {
 		const tab = await chrome.tabs.query({ active: true, currentWindow: true });
 
 		if (document.getElementById("tabThis").checked) {
-			urlList = tab?.[0]?.id
-				? urlStorage.filter((url) => url.tabId === tab[0].id)
-				: [];
+			urlList = tab?.[0]?.id ? urlStorage.filter((url) => url.tabId === tab[0].id) : [];
 		} else if (document.getElementById("tabAll").checked) {
-			urlList = urlStorage.filter(
-				(url) => url.tabData?.incognito === tab?.[0]?.incognito
-			);
+			urlList = urlStorage.filter((url) => url.tabData?.incognito === tab?.[0]?.incognito);
 		} else if (document.getElementById("tabPrevious").checked) {
 			urlList = urlStorageRestore ?? [];
 		}
@@ -425,13 +397,13 @@ const saveOption = (e) => {
 
 const restoreOptions = async () => {
 	titlePref = await getStorage("titlePref");
-	filenamePref = await getStorage("filenamePref");
-	timestampPref = await getStorage("timestampPref");
+	_filenamePref = await getStorage("filenamePref");
+	_timestampPref = await getStorage("timestampPref");
 	downloadDirectPref = await getStorage("downloadDirectPref");
-	newline = await getStorage("newline") ?? "\n";
+	newline = (await getStorage("newline")) ?? "\n";
 	recentPref = await getStorage("recentPref");
 	recentAmount = await getStorage("recentAmount");
-	noRestorePref = await getStorage("noRestorePref");
+	_noRestorePref = await getStorage("noRestorePref");
 
 	const options = document.getElementsByClassName("option");
 	for (const option of options) {
@@ -460,7 +432,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 	await createList();
 
 	// Tell background the popup is open (for badge clear on close)
-	const port = chrome.runtime.connect({ name: "popup" });
+	const _port = chrome.runtime.connect({ name: "popup" });
 
 	// Filter input
 	const filterEl = document.getElementById("filterInput");

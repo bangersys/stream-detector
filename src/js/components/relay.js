@@ -172,7 +172,7 @@ export async function sendDetection(payload) {
 	const message = {
 		type: "stream_detected",
 		version: "1.0",
-		...payload,
+		...payload
 	};
 
 	if (isConnected) {

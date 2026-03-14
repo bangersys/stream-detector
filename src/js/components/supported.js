@@ -13,32 +13,28 @@ const supported = [
 	// ─── Adaptive Streaming ───────────────────────────────────────────────
 	{
 		ext: ["m3u8"],
-		ct: [
-			"application/x-mpegurl",
-			"application/vnd.apple.mpegurl",
-			"audio/vnd.apple.mpegurl",
-		],
+		ct: ["application/x-mpegurl", "application/vnd.apple.mpegurl", "audio/vnd.apple.mpegurl"],
 		type: "HLS",
-		category: "stream",
+		category: "stream"
 	},
 	{
 		ext: ["mpd"],
 		ct: ["application/dash+xml"],
 		type: "DASH",
-		category: "stream",
+		category: "stream"
 	},
 	{
 		// base64 DASH variant used by some CDNs
 		ext: ["json?base64_init=1"],
 		ct: [],
 		type: "DASH",
-		category: "stream",
+		category: "stream"
 	},
 	{
 		ext: ["f4m"],
 		ct: ["application/f4m"],
 		type: "HDS",
-		category: "stream",
+		category: "stream"
 	},
 	{
 		// MSS: matched by URL path check in urlFilter (not the generic .ext matcher)
@@ -47,7 +43,7 @@ const supported = [
 		ct: [],
 		type: "MSS",
 		category: "stream",
-		mssMatch: true, // handled by dedicated check in background.js
+		mssMatch: true // handled by dedicated check in background.js
 	},
 
 	// ─── Subtitles ────────────────────────────────────────────────────────
@@ -55,25 +51,25 @@ const supported = [
 		ext: ["vtt"],
 		ct: ["text/vtt"],
 		type: "VTT",
-		category: "subtitles",
+		category: "subtitles"
 	},
 	{
 		ext: ["srt"],
 		ct: ["application/x-subrip"],
 		type: "SRT",
-		category: "subtitles",
+		category: "subtitles"
 	},
 	{
 		ext: ["ttml", "ttml2"],
 		ct: ["application/ttml+xml"],
 		type: "TTML",
-		category: "subtitles",
+		category: "subtitles"
 	},
 	{
 		ext: ["dfxp"],
 		ct: ["application/ttaf+xml"],
 		type: "DFXP",
-		category: "subtitles",
+		category: "subtitles"
 	},
 
 	// ─── Direct media files ───────────────────────────────────────────────
@@ -81,38 +77,38 @@ const supported = [
 		ext: ["mp4", "m4v", "m4s"],
 		ct: ["video/x-m4v", "video/m4v", "video/mp4"],
 		type: "MP4",
-		category: "files",
+		category: "files"
 	},
 	{
 		ext: ["ts", "m2t"],
 		ct: ["video/mp2t"],
 		type: "TS",
-		category: "files",
+		category: "files"
 	},
 	{
 		ext: ["aac", "m4a"],
 		ct: ["audio/aac", "audio/m4a"],
 		type: "AAC",
-		category: "files",
+		category: "files"
 	},
 	{
 		ext: ["mp3"],
 		ct: ["audio/mpeg"],
 		type: "MP3",
-		category: "files",
+		category: "files"
 	},
 	{
 		ext: ["ogg", "ogv", "oga", "opus"],
 		ct: ["video/ogg", "audio/ogg", "audio/opus"],
 		type: "OGG",
-		category: "files",
+		category: "files"
 	},
 	{
 		ext: ["weba", "webm"],
 		ct: ["audio/webm", "video/webm"],
 		type: "WEBM",
-		category: "files",
-	},
+		category: "files"
+	}
 ];
 
 export default supported;

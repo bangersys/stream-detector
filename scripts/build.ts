@@ -140,7 +140,7 @@ async function main() {
 
 		let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-		watch(SRC, { recursive: true }, (_event, filename) => {
+		watch(SRC, { recursive: true }, (_event: any, filename: any) => {
 			if (!filename) return;
 			// Debounce rapid file saves
 			if (debounceTimer) clearTimeout(debounceTimer);

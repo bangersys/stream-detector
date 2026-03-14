@@ -6,7 +6,7 @@
 export const getStorage = async (key) =>
 	new Promise((resolve) =>
 		chrome.storage.local.get(key, (value) => {
-			if (Object.prototype.hasOwnProperty.call(value, key)) resolve(value[key]);
+			if (Object.hasOwn(value, key)) resolve(value[key]);
 			else resolve(null);
 		})
 	);
@@ -40,22 +40,20 @@ export const saveOptionStorage = async (e, options = []) => {
 		e.target.value !== "kodiUrl" &&
 		!e.target.value.startsWith("user")
 	) {
-		const prefName = "customCommand" + e.target.value;
+		const prefName = `customCommand${e.target.value}`;
 		if (await getStorage(prefName))
-			document.getElementById("customCommand").value =
-				(await getStorage(prefName)) || "";
+			document.getElementById("customCommand").value = (await getStorage(prefName)) || "";
 	}
 
 	if (e.target.id === "regexCommand") {
 		await setStorage({ [e.target.id]: e.target.value });
 	} else if (e.target.id === "customCommand") {
 		await setStorage({
-			[e.target.id + document.getElementById("copyMethod").value]:
-				e.target.value?.trim(),
+			[e.target.id + document.getElementById("copyMethod").value]: e.target.value?.trim()
 		});
 	} else if (e.target.tagName.toLowerCase() === "textarea") {
 		await setStorage({
-			[e.target.id]: e.target.value?.split("\n").filter((ee) => ee),
+			[e.target.id]: e.target.value?.split("\n").filter((ee) => ee)
 		});
 	} else if (e.target.type === "checkbox") {
 		await setStorage({ [e.target.id]: e.target.checked });
@@ -65,7 +63,7 @@ export const saveOptionStorage = async (e, options = []) => {
 		for (const option of options) {
 			if (option.name === e.target.name) {
 				await setStorage({
-					[option.id]: document.getElementById(option.id).checked,
+					[option.id]: document.getElementById(option.id).checked
 				});
 			}
 		}

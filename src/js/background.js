@@ -15,25 +15,24 @@
  *   [6] Cookie extraction integrated into detection flow
  */
 
-import defaults from "./components/defaults.js";
-import supported from "./components/supported.js";
-import { getStorage, setStorage, clearStorage } from "./components/storage.js";
-import { getCookiesForUrl } from "./components/cookies.js";
-import { sendDetection, reconnect as relayReconnect } from "./components/relay.js";
-
+import iconDark16 from "../img/icon-dark-16.png";
+import iconDark48 from "../img/icon-dark-48.png";
+import iconDark96 from "../img/icon-dark-96.png";
+import iconDarkEnabled16 from "../img/icon-dark-enabled-16.png";
+import iconDarkEnabled48 from "../img/icon-dark-enabled-48.png";
+import iconDarkEnabled96 from "../img/icon-dark-enabled-96.png";
 // ─── Icon imports (handled by Bun bundler as data URLs) ───────────────────
 import iconLight16 from "../img/icon-light-16.png";
 import iconLight48 from "../img/icon-light-48.png";
 import iconLight96 from "../img/icon-light-96.png";
-import iconDark16 from "../img/icon-dark-16.png";
-import iconDark48 from "../img/icon-dark-48.png";
-import iconDark96 from "../img/icon-dark-96.png";
 import iconLightEnabled16 from "../img/icon-light-enabled-16.png";
 import iconLightEnabled48 from "../img/icon-light-enabled-48.png";
 import iconLightEnabled96 from "../img/icon-light-enabled-96.png";
-import iconDarkEnabled16 from "../img/icon-dark-enabled-16.png";
-import iconDarkEnabled48 from "../img/icon-dark-enabled-48.png";
-import iconDarkEnabled96 from "../img/icon-dark-enabled-96.png";
+import { getCookiesForUrl } from "./components/cookies.js";
+import defaults from "./components/defaults.js";
+import { reconnect as relayReconnect, sendDetection } from "./components/relay.js";
+import { clearStorage, getStorage, setStorage } from "./components/storage.js";
+import supported from "./components/supported.js";
 
 // ─── FIX [1]: chrome.action / chrome.browserAction compat shim ────────────
 // MV3 Chrome uses chrome.action; MV2 Firefox uses chrome.browserAction.
@@ -44,8 +43,7 @@ const _ = chrome.i18n.getMessage;
 
 const isChrome = chrome.runtime.getURL("").startsWith("chrome-extension://");
 const isDarkMode = () =>
-	typeof window !== "undefined" &&
-	window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+	typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches;
 
 // ─── State ────────────────────────────────────────────────────────────────
 const queue = [];
@@ -104,16 +102,16 @@ const updateIcons = () => {
 			path: {
 				16: isDarkMode() ? iconDarkEnabled16 : iconLightEnabled16,
 				48: isDarkMode() ? iconDarkEnabled48 : iconLightEnabled48,
-				96: isDarkMode() ? iconDarkEnabled96 : iconLightEnabled96,
-			},
+				96: isDarkMode() ? iconDarkEnabled96 : iconLightEnabled96
+			}
 		});
 	} else {
 		browserAction.setIcon({
 			path: {
 				16: isDarkMode() ? iconDark16 : iconLight16,
 				48: isDarkMode() ? iconDark48 : iconLight48,
-				96: isDarkMode() ? iconDark96 : iconLight96,
-			},
+				96: isDarkMode() ? iconDark96 : iconLight96
+			}
 		});
 	}
 };
@@ -153,11 +151,7 @@ const urlValidator = (e, requestDetails, headerSize, headerCt) => {
 		blacklistEntries?.some(
 			(entry) =>
 				requestDetails.url.toLowerCase().includes(entry.toLowerCase()) ||
-				(
-					requestDetails.documentUrl ||
-					requestDetails.originUrl ||
-					requestDetails.initiator
-				)
+				(requestDetails.documentUrl || requestDetails.originUrl || requestDetails.initiator)
 					?.toLowerCase()
 					.includes(entry.toLowerCase()) ||
 				headerCt?.value?.toLowerCase().includes(entry.toLowerCase()) ||
@@ -178,8 +172,7 @@ const urlFilter = (requestDetails) => {
 
 	// FIX [3]: MSS — dedicated path check, not fragile .ext substring
 	// Matches any URL with .ism/manifest or .isml/manifest in the path
-	const isMSS =
-		urlPath.includes(".ism/manifest") || urlPath.includes(".isml/manifest");
+	const isMSS = urlPath.includes(".ism/manifest") || urlPath.includes(".isml/manifest");
 
 	if (isMSS) {
 		ext = supported.find((f) => f.mssMatch === true);
@@ -188,25 +181,20 @@ const urlFilter = (requestDetails) => {
 	// Custom extension check
 	if (!ext && customExtPref && customSupported.ext?.length > 0) {
 		const matchedCustomExt = customSupported.ext.some((fe) =>
-			urlPath.includes("." + fe.toLowerCase())
+			urlPath.includes(`.${fe.toLowerCase()}`)
 		);
 		if (matchedCustomExt) ext = customSupported;
 	}
 
 	// Built-in extension check (skip MSS entries since handled above)
 	if (!ext) {
-		ext = supported.find(
-			(f) => !f.mssMatch && f.ext?.some((fe) => urlPath.includes("." + fe))
-		);
+		ext = supported.find((f) => !f.mssMatch && f.ext?.some((fe) => urlPath.includes(`.${fe}`)));
 	}
 
 	// Header detection
-	requestDetails.headers =
-		requestDetails.responseHeaders || requestDetails.requestHeaders;
+	requestDetails.headers = requestDetails.responseHeaders || requestDetails.requestHeaders;
 
-	const headerCt = requestDetails.headers?.find(
-		(h) => h.name.toLowerCase() === "content-type"
-	);
+	const headerCt = requestDetails.headers?.find((h) => h.name.toLowerCase() === "content-type");
 
 	if (headerCt?.value) {
 		// Custom CT check
@@ -220,16 +208,12 @@ const urlFilter = (requestDetails) => {
 		// Built-in CT check (exact match)
 		if (!head) {
 			head = supported.find((f) =>
-				f.ct?.some(
-					(fe) => headerCt.value.toLowerCase() === fe.toLowerCase()
-				)
+				f.ct?.some((fe) => headerCt.value.toLowerCase() === fe.toLowerCase())
 			);
 		}
 	}
 
-	const headerSize = requestDetails.headers?.find(
-		(h) => h.name.toLowerCase() === "content-length"
-	);
+	const headerSize = requestDetails.headers?.find((h) => h.name.toLowerCase() === "content-length");
 
 	const e = head || ext;
 
@@ -250,11 +234,12 @@ const addURL = async (requestDetails) => {
 		? url.pathname.slice(0, url.pathname.toLowerCase().lastIndexOf("/manifest"))
 		: url.pathname;
 
-	const filename = urlPath.lastIndexOf("/") > 0
-		? urlPath.slice(urlPath.lastIndexOf("/") + 1)
-		: urlPath.startsWith("/")
-		? urlPath.slice(1)
-		: urlPath;
+	const filename =
+		urlPath.lastIndexOf("/") > 0
+			? urlPath.slice(urlPath.lastIndexOf("/") + 1)
+			: urlPath.startsWith("/")
+				? urlPath.slice(1)
+				: urlPath;
 
 	const { hostname } = url;
 
@@ -286,30 +271,23 @@ const addURL = async (requestDetails) => {
 		tabData: {
 			title: tabData?.title,
 			url: tabData?.url,
-			incognito: tabData?.incognito,
-		},
+			incognito: tabData?.incognito
+		}
 	};
 
-	const isExistingRequest = urlStorage.find(
-		(u) => u.requestId === requestDetails.requestId
-	);
+	const isExistingRequest = urlStorage.find((u) => u.requestId === requestDetails.requestId);
 
 	if (!isExistingRequest) {
 		urlStorage.push(newRequestDetails);
 		browserAction.getBadgeText({}, (badgeText) => {
 			browserAction.setBadgeText({
-				text: (Number(badgeText) + 1).toString(),
+				text: (Number(badgeText) + 1).toString()
 			});
 		});
 	} else {
 		// Merge headers from the second listener hit (request + response)
-		const existingIndex = urlStorage.findIndex(
-			(u) => u.requestId === requestDetails.requestId
-		);
-		const mergedHeaders = [
-			...urlStorage[existingIndex].headers,
-			...newRequestDetails.headers,
-		];
+		const existingIndex = urlStorage.findIndex((u) => u.requestId === requestDetails.requestId);
+		const mergedHeaders = [...urlStorage[existingIndex].headers, ...newRequestDetails.headers];
 		urlStorage[existingIndex].headers = mergedHeaders;
 	}
 
@@ -318,7 +296,7 @@ const addURL = async (requestDetails) => {
 	allRequestDetails.push({
 		requestId: newRequestDetails.requestId,
 		filename: newRequestDetails.filename,
-		type: newRequestDetails.type,
+		type: newRequestDetails.type
 	});
 
 	requestTimeoutId = setTimeout(async () => {
@@ -326,9 +304,7 @@ const addURL = async (requestDetails) => {
 		chrome.runtime.sendMessage({ urlStorage: true }).catch(() => {});
 
 		// Clear processed batch from queue
-		allRequestDetails
-			.map((d) => d.requestId)
-			.forEach((id) => queue.splice(queue.indexOf(id), 1));
+		allRequestDetails.map((d) => d.requestId).forEach((id) => queue.splice(queue.indexOf(id), 1));
 
 		// Show notification
 		if (!notifDetectPref && !notifPref && (!autoDownloadPref || (autoDownloadPref && filePref))) {
@@ -337,16 +313,14 @@ const addURL = async (requestDetails) => {
 					type: "basic",
 					iconUrl: iconDark96,
 					title: _("notifManyTitle"),
-					message:
-						_("notifManyText") +
-						allRequestDetails.map((d) => d.filename).join(newline),
+					message: _("notifManyText") + allRequestDetails.map((d) => d.filename).join(newline)
 				});
 			} else {
 				chrome.notifications.create("add", {
 					type: "basic",
 					iconUrl: iconDark96,
 					title: _("notifTitle"),
-					message: _("notifText", newRequestDetails.type) + filename,
+					message: _("notifText", newRequestDetails.type) + filename
 				});
 			}
 		}
@@ -358,21 +332,23 @@ const addURL = async (requestDetails) => {
 	if (primedlRelayEnabled !== false) {
 		// Get cookies asynchronously — don't block detection flow
 		const tabUrl = newRequestDetails.tabData?.url;
-		getCookiesForUrl(tabUrl).then((cookieData) => {
-			sendDetection({
-				url: newRequestDetails.url,
-				filename: newRequestDetails.filename,
-				type: newRequestDetails.type,
-				category: newRequestDetails.category,
-				site: newRequestDetails.hostname,
-				tabTitle: newRequestDetails.tabData?.title ?? "",
-				tabUrl: tabUrl ?? "",
-				timestamp: newRequestDetails.timeStamp,
-				headers: newRequestDetails.headers,
-				cookies: cookieData.netscape,
-				cookieHeader: cookieData.cookieHeader,
-			}).catch((e) => console.warn("[primedl/relay] sendDetection error:", e));
-		}).catch((e) => console.warn("[primedl/cookies] getCookiesForUrl error:", e));
+		getCookiesForUrl(tabUrl)
+			.then((cookieData) => {
+				sendDetection({
+					url: newRequestDetails.url,
+					filename: newRequestDetails.filename,
+					type: newRequestDetails.type,
+					category: newRequestDetails.category,
+					site: newRequestDetails.hostname,
+					tabTitle: newRequestDetails.tabData?.title ?? "",
+					tabUrl: tabUrl ?? "",
+					timestamp: newRequestDetails.timeStamp,
+					headers: newRequestDetails.headers,
+					cookies: cookieData.netscape,
+					cookieHeader: cookieData.cookieHeader
+				}).catch((e) => console.warn("[primedl/relay] sendDetection error:", e));
+			})
+			.catch((e) => console.warn("[primedl/cookies] getCookiesForUrl error:", e));
 	}
 
 	// Auto-download non-manifest files if configured
@@ -384,14 +360,12 @@ const addURL = async (requestDetails) => {
 		const dlOptions = isChrome
 			? { filename: newRequestDetails.filename, url: newRequestDetails.url, saveAs: false }
 			: {
-				filename: newRequestDetails.filename,
-				headers: newRequestDetails.headers?.filter(
-					(h) => h.name.toLowerCase() === "referer"
-				) || [],
-				incognito: newRequestDetails.tabData?.incognito || false,
-				url: newRequestDetails.url,
-				saveAs: false,
-			};
+					filename: newRequestDetails.filename,
+					headers: newRequestDetails.headers?.filter((h) => h.name.toLowerCase() === "referer") || [],
+					incognito: newRequestDetails.tabData?.incognito || false,
+					url: newRequestDetails.url,
+					saveAs: false
+				};
 
 		chrome.downloads.download(dlOptions);
 	}
@@ -401,13 +375,11 @@ const addURL = async (requestDetails) => {
 const deleteURL = async (message) => {
 	if (message.previous !== true) {
 		urlStorage = urlStorage.filter(
-			(url) =>
-				!message.delete.map((u) => u.requestId).includes(url.requestId)
+			(url) => !message.delete.map((u) => u.requestId).includes(url.requestId)
 		);
 	} else {
 		urlStorageRestore = urlStorageRestore.filter(
-			(url) =>
-				!message.delete.map((u) => u.requestId).includes(url.requestId)
+			(url) => !message.delete.map((u) => u.requestId).includes(url.requestId)
 		);
 	}
 	await setStorage({ urlStorage });
@@ -453,7 +425,7 @@ const init = async () => {
 	browserAction.setBadgeText({ text: "" });
 
 	// Middle-click toolbar button → open popup in new tab
-	browserAction.onClicked.addListener((tab, onClickData) => {
+	browserAction.onClicked.addListener((_tab, onClickData) => {
 		if (onClickData?.button === 1) {
 			chrome.tabs.create({ url: "/popup.html" });
 		}
@@ -478,9 +450,7 @@ const init = async () => {
 	if (urlStorage.length > 0 && !noRestorePref) {
 		urlStorageRestore = [...urlStorageRestore, ...urlStorage];
 		// Strip incognito entries — never persist those
-		urlStorageRestore = urlStorageRestore.filter(
-			(url) => url.tabData?.incognito !== true
-		);
+		urlStorageRestore = urlStorageRestore.filter((url) => url.tabData?.incognito !== true);
 		await setStorage({ urlStorageRestore });
 	} else {
 		urlStorageRestore = [];
