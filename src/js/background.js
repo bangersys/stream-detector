@@ -306,7 +306,11 @@ const addURL = async (requestDetails) => {
 		chrome.runtime.sendMessage({ urlStorage: true }).catch(() => {});
 
 		// Clear processed batch from queue
-		allRequestDetails.map((d) => d.requestId).forEach((id) => queue.splice(queue.indexOf(id), 1));
+		allRequestDetails
+			.map((d) => d.requestId)
+			.forEach((id) => {
+				queue.splice(queue.indexOf(id), 1);
+			});
 
 		// Show notification
 		if (!notifDetectPref && !notifPref && (!autoDownloadPref || (autoDownloadPref && filePref))) {

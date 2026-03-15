@@ -15,15 +15,25 @@
     "@types/node": "^25.5.0"
   },
   "scripts": {
+    "clean": "rm -rf dist dist-chrome",
     "build": "bun run scripts/build.ts --all",
     "build:firefox": "bun run scripts/build.ts --firefox",
     "build:chrome": "bun run scripts/build.ts --chrome",
+    "build:zip": "bun run scripts/build-zip.ts --all",
+    "build:zip:firefox": "bun run scripts/build-zip.ts --firefox",
+    "build:zip:chrome": "bun run scripts/build-zip.ts --chrome",
+    "release:firefox": "bun run build:firefox && bun run build:zip:firefox",
+    "release:chrome": "bun run build:chrome && bun run build:zip:chrome",
+    "release": "bun run clean && bun run build && bun run build:zip",
     "dev": "bun run scripts/build.ts --firefox --watch",
     "dev:chrome": "bun run scripts/build.ts --chrome --watch",
     "lint": "biome lint src/",
     "lint:fix": "biome lint --write src/",
     "fmt": "biome format --write src/",
     "check": "biome check --write src/",
-    "ci": "biome ci src/"
+    "fix:unsafe": "biome check --write --unsafe src/",
+    "ci": "biome ci src/",
+    "check-version": "bun run scripts/check-version.ts",
+    "sync-version": "bun run scripts/check-version.ts --fix"
   }
 }

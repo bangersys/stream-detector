@@ -1,83 +1,83 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.7/schema.json",
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
-  },
-  "files": {
-    "includes": [
-      "src/**/*.js",
-      "src/**/*.css",
-      "scripts/**/*.ts",
-      "!dist/**",
-      "!dist-chrome/**",
-      "!node_modules/**"
-    ]
-  },
-  "assist": { "actions": { "source": { "organizeImports": "on" } } },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "correctness": {
-        "noUnusedVariables": "warn",
-        "noUnusedImports": "warn"
-      },
-      "style": {
-        "useConst": "error",
-        "useTemplate": "warn"
-      },
-      "suspicious": {
-        "noExplicitAny": "off",
-        "noVar": "error",
-        "useIterableCallbackReturn": "off",
-        "noConsole": { "level": "off", "options": { "allow": ["log"] } }
-      },
-      "complexity": {
-        "noExcessiveCognitiveComplexity": "off"
-      }
-    }
-  },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "tab",
-    "indentWidth": 1,
-    "lineWidth": 100,
-    "lineEnding": "lf"
-  },
-  "javascript": {
-    "formatter": {
-      "quoteStyle": "double",
-      "trailingCommas": "none",
-      "semicolons": "always",
-      "arrowParentheses": "always"
-    },
-    "globals": [
-      "chrome",
-      "browser",
-      "navigator",
-      "window",
-      "document",
-      "fetch",
-      "WebSocket",
-      "URL",
-      "Blob",
-      "FileReader",
-      "MutationObserver",
-      "setTimeout",
-      "clearTimeout",
-      "setInterval",
-      "clearInterval"
-    ]
-  },
-  "css": {
-    "formatter": {
-      "enabled": true,
-      "indentStyle": "tab"
-    },
-    "linter": {
-      "enabled": true
-    }
-  }
+	"$schema": "https://biomejs.dev/schemas/2.4.7/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"includes": [
+			"**/src/**/*.js",
+			"**/src/**/*.css",
+			"**/scripts/**/*.ts",
+			"**/!dist/**",
+			"**/!dist-chrome/**",
+			"**/!node_modules/**"
+		]
+	},
+	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"correctness": {
+				"noUnusedVariables": "warn",
+				"noUnusedImports": "warn"
+			},
+			"style": {
+				"useConst": "error",
+				"useTemplate": "error"
+			},
+			"suspicious": {
+				"noExplicitAny": "off",
+				"noVar": "error",
+				"noConsole": { "level": "off", "options": { "allow": ["log"] } }
+			},
+			"complexity": {
+				"noExcessiveCognitiveComplexity": "off"
+			}
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"indentWidth": 1,
+		"lineWidth": 100,
+		"lineEnding": "lf"
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double",
+			"trailingCommas": "none",
+			"semicolons": "always",
+			"arrowParentheses": "always"
+		},
+		"globals": [
+			"chrome",
+			"browser",
+			"navigator",
+			"window",
+			"document",
+			"fetch",
+			"WebSocket",
+			"URL",
+			"Blob",
+			"Map",
+			"FileReader",
+			"MutationObserver",
+			"setTimeout",
+			"clearTimeout",
+			"setInterval",
+			"clearInterval"
+		]
+	},
+	"css": {
+		"formatter": {
+			"enabled": true,
+			"indentStyle": "tab"
+		},
+		"linter": {
+			"enabled": true
+		}
+	}
 }

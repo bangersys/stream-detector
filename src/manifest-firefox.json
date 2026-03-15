@@ -5,6 +5,12 @@
 	"manifest_version": 2,
 	"default_locale": "en",
 	"incognito": "split",
+	"browser_specific_settings": {
+		"gecko": {
+			"id": "primedl@primedl.app",
+			"strict_min_version": "89.0"
+		}
+	},
 	"permissions": [
 		"<all_urls>",
 		"activeTab",
