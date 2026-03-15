@@ -1,3 +1,10 @@
+/**
+ * primedl — sidebar.css
+ *
+ * Structural styles for sidebar.html. All colors reference --pd-* tokens
+ * defined in tokens.css. No hardcoded colors anywhere in this file.
+ */
+
 /* ── Base ─────────────────────────────────────────────────────────────── */
 
 html,
@@ -10,12 +17,10 @@ body {
 
 body {
 	display: flex;
-	font-family:
-		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell,
-		"Helvetica Neue", Arial, sans-serif;
+	font-family: var(--pd-font);
 	font-size: 0.85em;
-	background: #fff;
-	color: #202023;
+	background: var(--pd-bg);
+	color: var(--pd-fg);
 	user-select: none;
 }
 
@@ -32,7 +37,7 @@ body {
 
 .tab-row {
 	display: flex;
-	border-bottom: 1px solid gainsboro;
+	border-bottom: 1px solid var(--pd-border);
 	flex-shrink: 0;
 }
 
@@ -50,7 +55,7 @@ body {
 }
 
 .tab-label:hover {
-	background: gainsboro;
+	background: var(--pd-bg-hover);
 }
 
 .tab-label input[type="radio"] {
@@ -65,7 +70,7 @@ body {
 	align-items: center;
 	gap: 6px;
 	padding: 5px 8px;
-	border-bottom: 1px solid gainsboro;
+	border-bottom: 1px solid var(--pd-border);
 	flex-shrink: 0;
 }
 
@@ -81,33 +86,33 @@ body {
 	min-width: 0;
 	padding: 3px 6px;
 	font-size: 0.9em;
-	border: 1px solid #ccc;
-	border-radius: 3px;
-	background: inherit;
-	color: inherit;
+	border: 1px solid var(--pd-border-input);
+	border-radius: var(--pd-radius);
+	background: var(--pd-bg);
+	color: var(--pd-fg);
 }
 
 #clearFilterInput {
 	background: none;
 	border: none;
 	cursor: pointer;
-	color: #999;
+	color: var(--pd-relay-off);
 	padding: 0 2px;
 	font-size: 0.85em;
 	line-height: 1;
 }
 
 #clearFilterInput:hover {
-	color: #555;
+	color: var(--pd-fg);
 }
 
 .method-group select {
 	font-size: 0.85em;
 	padding: 3px 5px;
-	border: 1px solid #ccc;
-	border-radius: 3px;
-	background: inherit;
-	color: inherit;
+	border: 1px solid var(--pd-border-input);
+	border-radius: var(--pd-radius);
+	background: var(--pd-bg);
+	color: var(--pd-fg);
 }
 
 /* ── URL list table ───────────────────────────────────────────────────── */
@@ -136,16 +141,13 @@ td {
 .th-center {
 	text-align: center;
 }
-
 .th-left {
 	text-align: left;
 }
-
 td.td-center {
 	text-align: center;
 }
 
-/* Sidebar columns: content takes all space, delete is fixed narrow */
 .col-content {
 	width: auto;
 }
@@ -154,13 +156,13 @@ td.td-center {
 }
 
 thead {
-	border-bottom: 1px solid gainsboro;
+	border-bottom: 1px solid var(--pd-border);
 	font-size: 0.82em;
 	opacity: 0.7;
 }
 
 .urlEntry {
-	border-bottom: 1px solid gainsboro;
+	border-bottom: 1px solid var(--pd-border);
 }
 
 .urlEntry:last-child {
@@ -169,10 +171,9 @@ thead {
 
 .urlEntry:hover,
 .urlEntry:focus-within {
-	background-color: #f0f0f3;
+	background-color: var(--pd-bg-hover);
 }
 
-/* Sidebar URL entry spans — stacked inside the content cell */
 .urlSource {
 	display: block;
 	font-size: 0.82em;
@@ -206,7 +207,7 @@ thead {
 	align-items: center;
 	gap: 4px;
 	padding: 5px 8px;
-	border-top: 1px solid gainsboro;
+	border-top: 1px solid var(--pd-border);
 	flex-shrink: 0;
 	flex-wrap: wrap;
 }
@@ -215,7 +216,7 @@ thead {
 	display: flex;
 	align-items: center;
 	gap: 4px;
-	font-size: 0.82em;
+	font-size: 0.8em;
 	cursor: pointer;
 	margin-right: auto;
 	user-select: none;
@@ -230,15 +231,15 @@ thead {
 	padding: 3px 8px;
 	font-size: 0.82em;
 	cursor: pointer;
-	border: 1px solid #ccc;
-	border-radius: 3px;
-	background: #f5f5f5;
-	color: inherit;
+	border: 1px solid var(--pd-border-input);
+	border-radius: var(--pd-radius);
+	background: var(--pd-bg-2);
+	color: var(--pd-fg);
 	white-space: nowrap;
 }
 
 .action-bar button:hover {
-	background: #e8e8e8;
+	background: var(--pd-bg-hover);
 }
 
 .action-bar button label {
@@ -252,22 +253,21 @@ thead {
 	padding: 4px 10px;
 	text-align: right;
 	font-size: 0.75em;
-	border-top: 1px solid gainsboro;
+	border-top: 1px solid var(--pd-border);
 	flex-shrink: 0;
 }
 
 .relay-connected {
-	color: #2a7a2a;
+	color: var(--pd-relay-on);
 }
-
 .relay-disconnected {
-	color: #999;
+	color: var(--pd-relay-off);
 }
 
 /* ── Cookie section ───────────────────────────────────────────────────── */
 
 #cookieSection {
-	border-top: 1px solid gainsboro;
+	border-top: 1px solid var(--pd-border);
 	flex-shrink: 0;
 }
 
@@ -281,12 +281,12 @@ thead {
 	border: none;
 	cursor: pointer;
 	font-size: 0.82em;
-	color: inherit;
+	color: var(--pd-fg);
 	text-align: left;
 }
 
 #cookieToggle:hover {
-	background-color: gainsboro;
+	background-color: var(--pd-bg-hover);
 }
 
 #cookieToggleIcon {
@@ -332,10 +332,10 @@ thead {
 	flex: 1;
 	font-size: 0.9em;
 	padding: 2px 4px;
-	border: 1px solid #ccc;
-	border-radius: 3px;
-	background: inherit;
-	color: inherit;
+	border: 1px solid var(--pd-border-input);
+	border-radius: var(--pd-radius);
+	background: var(--pd-bg);
+	color: var(--pd-fg);
 }
 
 .cookie-btn-row {
@@ -347,10 +347,10 @@ thead {
 .cookie-btn-row button {
 	padding: 4px 4px;
 	font-size: 0.78em;
-	border: 1px solid #ccc;
-	border-radius: 3px;
-	background: #f5f5f5;
-	color: inherit;
+	border: 1px solid var(--pd-border-input);
+	border-radius: var(--pd-radius);
+	background: var(--pd-bg-2);
+	color: var(--pd-fg);
 	cursor: pointer;
 	white-space: nowrap;
 	overflow: hidden;
@@ -358,7 +358,7 @@ thead {
 }
 
 .cookie-btn-row button:hover {
-	background: #e8e8e8;
+	background: var(--pd-bg-hover);
 }
 
 .cookie-btn-row button label {
@@ -367,76 +367,7 @@ thead {
 }
 
 .cookie-copy-btn.cookie-copied {
-	background: #d4edda;
-	border-color: #c3e6cb;
-	color: #155724;
-}
-
-/* ── Dark mode ────────────────────────────────────────────────────────── */
-
-@media (prefers-color-scheme: dark) {
-	body {
-		background: #202023;
-		color: #e8e8ec;
-	}
-
-	.tab-row,
-	.toolbar-row,
-	thead,
-	.urlEntry,
-	.action-bar,
-	#primedlStatusBar,
-	#cookieSection {
-		border-color: #3a3a3f;
-	}
-
-	.tab-label:hover {
-		background: #2c2c30;
-	}
-
-	.filter-group input[type="text"],
-	.method-group select,
-	.cookie-format-row select {
-		background: #2c2c30;
-		border-color: #444;
-		color: #e8e8ec;
-	}
-
-	#clearFilterInput:hover {
-		color: #aaa;
-	}
-
-	.urlEntry:hover,
-	.urlEntry:focus-within {
-		background-color: #2c2c30;
-	}
-
-	.action-bar button,
-	.cookie-btn-row button {
-		background: #2c2c30;
-		border-color: #444;
-	}
-
-	.action-bar button:hover,
-	.cookie-btn-row button:hover {
-		background: #3a3a3f;
-	}
-
-	.relay-connected {
-		color: #5cb85c;
-	}
-
-	.relay-disconnected {
-		color: #666;
-	}
-
-	#cookieToggle:hover {
-		background-color: #2c2c30;
-	}
-
-	.cookie-copy-btn.cookie-copied {
-		background: #1a3a27;
-		border-color: #2a5f3a;
-		color: #6fcf97;
-	}
+	background: var(--pd-cookie-ok-bg);
+	border-color: var(--pd-cookie-ok-bd);
+	color: var(--pd-cookie-ok-fg);
 }

@@ -1,78 +1,78 @@
 {
 	"autoDownloadPref": {
-		"message": "non-manifest 파일 자동 다운로드"
+		"message": "비스트림 파일 자동 다운로드"
 	},
 	"autoDownloadTip": {
-		"message": "기본 다운로드 폴더로 파일을 저장합니다. 실시간 스트림을 다운로드할 때 유용합니다. '다이렉트 링크 형식 무시' 옵션이 체크되지 않을 때만 작동합니다. 불필요한 다운로드를 방지하기 위해 블랙리스트 기능을 사용하십시오."
+		"message": "기본 다운로드 폴더에 저장합니다. 스트림 감시 중 파일 다운로드에 유용합니다. '미디어 파일 직접 링크 무시'가 체크 해제된 경우에만 작동합니다."
 	},
 	"blacklistPref": {
-		"message": "컨텐츠 블랙리스트 사용"
+		"message": "콘텐츠 블랙리스트 사용"
 	},
 	"blacklistTip": {
-		"message": "한 줄에 한 항목씩 입력하세요. 대소문자 구별없음."
+		"message": "한 줄에 하나씩 입력, 대소문자 구분 없음. 스트림/파일 유형, Content-Type 헤더, URL에 적용됩니다."
 	},
 	"buttonClick": {
 		"message": "브라우저 액션 버튼 기능"
 	},
 	"clearList": {
-		"message": "초기화"
+		"message": "이 URL 목록 지우기"
 	},
 	"copyAll": {
-		"message": "모든 URL 복사"
+		"message": "보이는 URL 모두 복사"
 	},
 	"copyMethod": {
-		"message": "URL 복사 형식"
+		"message": "스트림 URL 복사 형식"
 	},
 	"customCommandPref": {
-		"message": "추가 파라미터"
+		"message": "추가 명령줄 파라미터"
 	},
 	"customCtPref": {
-		"message": "감지 규칙 추가 (content-type 헤더)"
+		"message": "추가 Content-Type 헤더 감지"
 	},
 	"customCtTip": {
-		"message": "한 줄에 한 항목씩 입력하세요. 대소문자 구별없음."
+		"message": "한 줄에 하나씩 입력. 대소문자 구분 없음."
 	},
 	"customExtPref": {
-		"message": "감지 규칙 추가 (파일 확장자)"
+		"message": "추가 파일 확장자 감지"
 	},
 	"customExtTip": {
-		"message": "한 줄에 한 항목씩 입력하세요."
+		"message": "한 줄에 하나씩 입력."
 	},
 	"deleteTooltip": {
-		"message": "이 URL을 목록에서 제거합니다."
+		"message": "클릭하여 URL 삭제."
 	},
 	"disablePref": {
-		"message": "감지 기능 비활성화"
+		"message": "감지 비활성화"
 	},
 	"downloadDirectPref": {
-		"message": "URL을 복사하지 않고 non-manifest 파일 다운로드"
+		"message": "비스트림 파일 URL 복사 대신 다운로드"
 	},
 	"downloaderPref": {
-		"message": "외부 다운로더 사용 (yt-dlp)"
+		"message": "yt-dlp 외부 다운로더 사용"
 	},
 	"exportButton": {
 		"message": "내보내기"
 	},
 	"exportSettings": {
-		"message": "JSON 형식으로 설정값 내보내기/불러오기"
+		"message": "설정을 JSON 파일로 내보내기/가져오기"
 	},
 	"extText": {
-		"message": "HLS/DASH/HDS/MSS 스트림을 감지하여 primedl로 전달합니다. yt-dlp, FFmpeg, Streamlink 등의 명령어를 생성합니다."
+		"message": "HLS/DASH/HDS/MSS 스트림을 감지하고 primedl로 전달하여 다운로드합니다. yt-dlp, FFmpeg, Streamlink 등의 명령어를 조합합니다."
 	},
 	"ffmpeg": {
 		"message": "FFmpeg 명령어"
 	},
 	"file": {
-		"message": "파일로 저장"
+		"message": "파일"
 	},
 	"fileExtension": {
 		"message": "파일 확장자"
 	},
 	"filePref": {
-		"message": "다이렉트 링크 형식 무시"
+		"message": "미디어 파일 직접 링크 무시"
 	},
 	"fileSizePref": {
-		"message": "다음 크기 미만의 영상 파일은 무시합니다"
+		"message": "이 크기보다 작은 미디어 파일 무시"
 	},
 	"filenamePref": {
 		"message": "탭 제목을 파일명으로 사용"
@@ -81,88 +81,88 @@
 		"message": "필터"
 	},
 	"headersPref": {
-		"message": "헤더 추가하기"
+		"message": "추가 헤더 포함"
 	},
 	"hlsdl": {
 		"message": "hlsdl 명령어"
 	},
 	"importButton": {
-		"message": "불러오기"
+		"message": "가져오기"
 	},
 	"importButtonFailure": {
-		"message": "설정값을 불러올 수 없습니다."
+		"message": "설정을 가져올 수 없습니다."
 	},
 	"kodiUrl": {
 		"message": "Kodi URL"
 	},
 	"manifestPref": {
-		"message": "스트림 무시하기"
+		"message": "스트림 무시"
 	},
 	"manifestTip": {
-		"message": "본 부가 기능의 주요 기능입니다. 특정 파일 확장자/컨텐츠 타입만 감지하고 싶은 경우 비활성화하세요."
+		"message": "이 기능이 이 애드온의 주요 목적입니다. 파일 직접 캡처 또는 사용자 정의 확장자/콘텐츠 유형만 사용하려면 비활성화하세요."
 	},
 	"multithreadPref": {
-		"message": "동시 다운로드 분할 수 (yt-dlp)"
+		"message": "yt-dlp에서 여러 세그먼트 동시 다운로드"
 	},
 	"nm3u8dl": {
 		"message": "N_m3u8DL-RE 명령어"
 	},
 	"noRestorePref": {
-		"message": "이전 세션 기능 비활성화 (시작 시 초기화)"
+		"message": "이전 세션 기능 비활성화 (실행 시 항목 지우기)"
 	},
 	"notifCopiedText": {
-		"message": "성공적으로 클립보드에 복사됐습니다:\n"
+		"message": "다음 URL이 복사되었습니다:\n"
 	},
 	"notifCopiedTitle": {
-		"message": "URL 복사 성공!"
+		"message": "URL 복사됨!"
 	},
 	"notifDetectPref": {
-		"message": "감지 알림 끄기"
+		"message": "감지 알림 비활성화"
 	},
 	"notifDownErrorText": {
-		"message": "URL을 다운로드할 수 없습니다:\n"
+		"message": "URL 다운로드 불가:\n"
 	},
 	"notifDownErrorTitle": {
-		"message": "다운로드 에러!"
+		"message": "다운로드 오류!"
 	},
 	"notifErrorText": {
-		"message": "URL을 복사할 수 없습니다:\n"
+		"message": "URL 복사 불가:\n"
 	},
 	"notifErrorTitle": {
-		"message": "복사 에러!"
+		"message": "복사 오류!"
 	},
 	"notifIncompCopiedText": {
-		"message": "선택한 옵션과는 호환되지 않아 원본 스트림 URL로 복사됐습니다:\n"
+		"message": "선택한 도구와 호환되지 않아 일반 형식으로 스트림 URL이 복사되었습니다:\n"
 	},
 	"notifManyText": {
-		"message": "새로운 스트림이 감지됐습니다:\n"
+		"message": "새 스트림 감지:\n"
 	},
 	"notifManyTitle": {
-		"message": "스트림 감지 성공!"
+		"message": "여러 스트림 감지됨!"
 	},
 	"notifPref": {
-		"message": "모든 알림 끄기"
+		"message": "모든 알림 비활성화"
 	},
 	"notifText": {
-		"message": "새로운 $1 스트림 주소가 감지됐습니다:\n"
+		"message": "새 $1 스트림 감지됨:\n"
 	},
 	"notifTitle": {
-		"message": "스트림 감지 성공!"
+		"message": "스트림 감지됨!"
 	},
 	"openOptions": {
 		"message": "옵션"
 	},
 	"openPopup": {
-		"message": "부가 기능 팝업 열기"
+		"message": "애드온 팝업 열기"
 	},
 	"openSidebar": {
-		"message": "부가 기능 사이드바 열기"
+		"message": "애드온 사이드바 열기"
 	},
 	"placeholderCell": {
-		"message": "목록 없음"
+		"message": "URL 없음."
 	},
 	"player": {
-		"message": "플레이어로 재생"
+		"message": "기본 플레이어"
 	},
 	"popupFilename": {
 		"message": "파일명"
@@ -174,43 +174,43 @@
 		"message": "출처"
 	},
 	"popupTimestamp": {
-		"message": "시간"
+		"message": "시각"
 	},
 	"popupType": {
-		"message": "종류"
+		"message": "유형"
 	},
 	"proxyPref": {
 		"message": "HTTP 프록시 서버 사용"
 	},
 	"recentPref": {
-		"message": "표시 항목 수 제한"
+		"message": "최신 항목만 특정 개수 표시"
 	},
 	"regexCommandPref": {
-		"message": "사용자 정의 명령어에 regex 사용"
+		"message": "사용자 정의 명령어에 정규식 사용"
 	},
 	"regexCommandTip": {
-		"message": "string으로 입력하세요. 예: ab+c. 최종 사용자 명령에서 교체를 수행합니다."
+		"message": "문자열로 입력, 예: ab+c. 최종 사용자 명령어에서 치환을 수행합니다. 치환 필드가 비어 있으면 일치 항목이 삭제됩니다."
 	},
 	"regexWarning": {
-		"message": "잘못된 정규 표현식."
+		"message": "잘못된 정규식입니다."
 	},
 	"resetButton": {
 		"message": "설정 초기화"
 	},
 	"resetButtonConfirm": {
-		"message": "정말로 모든 설정을 초기화하시겠습니까?"
+		"message": "모든 설정을 초기화하시겠습니까?"
 	},
 	"resetButtonLabel": {
-		"message": "모든 부가 기능 데이터 초기화 (긴급 상황 시)"
+		"message": "모든 애드온 데이터 초기화 (긴급 시)"
 	},
 	"streamlink": {
 		"message": "Streamlink 명령어"
 	},
 	"streamlinkOutput": {
-		"message": "Streamlink 저장 옵션"
+		"message": "Streamlink 출력"
 	},
 	"subtitlePref": {
-		"message": "자막 무시하기"
+		"message": "자막 무시"
 	},
 	"tabAll": {
 		"message": "현재 세션"
@@ -222,19 +222,19 @@
 		"message": "현재 탭"
 	},
 	"tableForm": {
-		"message": "표 형식"
+		"message": "테이블 항목"
 	},
 	"timestampPref": {
-		"message": "파일명에 시간 추가"
+		"message": "파일명에 타임스탬프 추가"
 	},
 	"tipHint": {
-		"message": "물음표 위에 마우스를 올려놓으면 특정 옵션에 대한 설명을 확인할 수 있습니다."
+		"message": "물음표에 마우스를 올리면 각 옵션에 대한 자세한 정보를 볼 수 있습니다."
 	},
 	"titlePref": {
-		"message": "출처 칸에 URL 대신 탭 제목 사용"
+		"message": "탭 제목을 출처로 표시"
 	},
 	"url": {
-		"message": "원본 URL"
+		"message": "일반 URL"
 	},
 	"user1": {
 		"message": "사용자 정의 명령어 1"
@@ -249,7 +249,7 @@
 		"message": "사용자 정의 명령어"
 	},
 	"userCommandTip": {
-		"message": "사용 가능한 변수:\n%url%\n%filename%\n%useragent%\n%referer%\n%cookie%\n%proxy%\n%origin%\n%tabtitle%\n%timestamp%"
+		"message": "사용 가능한 필드:\n%url%\n%filename%\n%useragent%\n%referer%\n%cookie%\n%proxy%\n%origin%\n%tabtitle%\n%timestamp%"
 	},
 	"ytdlp": {
 		"message": "yt-dlp 명령어"
@@ -261,13 +261,13 @@
 		"message": "primedl 로컬 서버 포트"
 	},
 	"primedlRelayTip": {
-		"message": "primedl이 이 포트에서 실행 중이어야 합니다. 기본값: 7421."
+		"message": "스트림을 수신하려면 primedl이 이 포트에서 실행 중이어야 합니다. 기본값: 7421."
 	},
 	"cookieSection": {
 		"message": "쿠키"
 	},
 	"cookieCount": {
-		"message": "개의 쿠키 발견"
+		"message": "쿠키 발견"
 	},
 	"cookieFormat": {
 		"message": "형식"
@@ -285,7 +285,7 @@
 		"message": "내보내기"
 	},
 	"cookieExportAs": {
-		"message": "다른 이름으로 저장"
+		"message": "다른 이름으로 내보내기"
 	},
 	"cookieCopy": {
 		"message": "복사"
@@ -295,5 +295,29 @@
 	},
 	"cookieExportAll": {
 		"message": "전체 내보내기"
+	},
+	"uiTheme": {
+		"message": "테마"
+	},
+	"uiThemeTip": {
+		"message": "팝업과 사이드바의 시각적 스타일을 선택합니다. 변경 사항은 즉시 적용됩니다."
+	},
+	"themeDefault": {
+		"message": "기본"
+	},
+	"themeTerminal": {
+		"message": "Terminal Dark"
+	},
+	"themeCleanCard": {
+		"message": "카드 / 탭"
+	},
+	"themeCompact": {
+		"message": "컴팩트"
+	},
+	"themeDashboard": {
+		"message": "대시보드"
+	},
+	"themeBrutalist": {
+		"message": "Mono Brutalist"
 	}
 }

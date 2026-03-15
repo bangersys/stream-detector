@@ -295,5 +295,29 @@
 	},
 	"cookieExportAll": {
 		"message": "Экспорт всех"
+	},
+	"uiTheme": {
+		"message": "Тема оформления"
+	},
+	"uiThemeTip": {
+		"message": "Выберите визуальный стиль для всплывающего окна и боковой панели. Изменения применяются немедленно."
+	},
+	"themeDefault": {
+		"message": "По умолчанию"
+	},
+	"themeTerminal": {
+		"message": "Terminal Dark"
+	},
+	"themeCleanCard": {
+		"message": "Карточки / Вкладки"
+	},
+	"themeCompact": {
+		"message": "Компактный"
+	},
+	"themeDashboard": {
+		"message": "Панель"
+	},
+	"themeBrutalist": {
+		"message": "Mono Brutalist"
 	}
 }

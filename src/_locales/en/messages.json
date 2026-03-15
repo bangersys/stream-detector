@@ -295,5 +295,30 @@
 	},
 	"cookieExportAll": {
 		"message": "Export All"
+	},
+	"uiTheme": {
+		"message": "Theme"
+	},
+	"uiThemeTip": {
+		"message": "Choose the visual style for the popup and sidebar. Changes apply instantly."
+	},
+	"themeDefault": {
+		"message": "Default"
+	},
+	"themeTerminal": {
+		"message": "Terminal Dark"
+	},
+	"themeCleanCard": {
+		"message": "Clean / Tabbed"
+	},
+	"themeCompact": {
+		"message": "Compact"
+	},
+	"themeDashboard": {
+		"message": "Dashboard"
+	},
+	"themeBrutalist": {
+		"message": "Mono Brutalist"
 	}
 }
+

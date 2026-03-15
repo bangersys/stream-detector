@@ -295,5 +295,29 @@
 	},
 	"cookieExportAll": {
 		"message": "Alle exportieren"
+	},
+	"uiTheme": {
+		"message": "Design"
+	},
+	"uiThemeTip": {
+		"message": "Visuellen Stil für das Popup und die Seitenleiste auswählen. Änderungen werden sofort angewendet."
+	},
+	"themeDefault": {
+		"message": "Standard"
+	},
+	"themeTerminal": {
+		"message": "Terminal Dark"
+	},
+	"themeCleanCard": {
+		"message": "Karten / Tabs"
+	},
+	"themeCompact": {
+		"message": "Kompakt"
+	},
+	"themeDashboard": {
+		"message": "Dashboard"
+	},
+	"themeBrutalist": {
+		"message": "Mono Brutalist"
 	}
 }

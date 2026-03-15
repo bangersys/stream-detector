@@ -1,0 +1,131 @@
+/**
+ * primedl — themes/terminal.css
+ * Theme 01: Terminal Dark
+ *
+ * Always-dark hacker-tool aesthetic. Monospace throughout.
+ * Ignores OS color-scheme preference — always applies its own palette.
+ * Stream type cells get color-coded via data-stream-type attribute.
+ */
+
+[data-theme="terminal"] {
+	--pd-bg: #0a0a0a;
+	--pd-fg: #d8d8d8;
+	--pd-bg-2: #111111;
+	--pd-bg-hover: #0d200d;
+	--pd-border: #222222;
+	--pd-border-input: #333333;
+	--pd-border-strong: #444444;
+
+	--pd-font: "DM Mono", ui-monospace, "Cascadia Code", "Fira Mono", "Consolas", monospace;
+	--pd-radius: 2px;
+	--pd-radius-md: 2px;
+	--pd-radius-lg: 3px;
+
+	--pd-accent: #00c850;
+	--pd-accent-fg: #000000;
+
+	--pd-relay-on: #00c850;
+	--pd-relay-off: #444444;
+
+	--pd-cookie-ok-bg: #0a2015;
+	--pd-cookie-ok-bd: #00c850;
+	--pd-cookie-ok-fg: #00c850;
+
+	--pd-tag-radius: 0px;
+	--pd-tag-font-weight: 700;
+}
+
+/* ─── Stream type color coding ───────────────────────────────────────────── */
+[data-theme="terminal"] td[data-stream-type="HLS"] {
+	color: #00c850;
+}
+[data-theme="terminal"] td[data-stream-type="DASH"] {
+	color: #f0a500;
+}
+[data-theme="terminal"] td[data-stream-type="HDS"] {
+	color: #f06060;
+}
+[data-theme="terminal"] td[data-stream-type="MSS"] {
+	color: #b06cf0;
+}
+[data-theme="terminal"] td[data-stream-type="MP4"],
+[data-theme="terminal"] td[data-stream-type="MKV"],
+[data-theme="terminal"] td[data-stream-type="WebM"] {
+	color: #60b0f0;
+}
+[data-theme="terminal"] td[data-stream-type="TS"] {
+	color: #888888;
+}
+[data-theme="terminal"] td[data-stream-type="AAC"],
+[data-theme="terminal"] td[data-stream-type="MP3"] {
+	color: #c8a050;
+}
+[data-theme="terminal"] td[data-stream-type="VTT"],
+[data-theme="terminal"] td[data-stream-type="SRT"] {
+	color: #606060;
+}
+
+[data-theme="terminal"] td[data-stream-type] {
+	font-weight: 700;
+	font-size: 0.85em;
+	letter-spacing: 0.04em;
+}
+
+/* ─── Tab row ────────────────────────────────────────────────────────────── */
+[data-theme="terminal"] .tab-label {
+	font-size: 0.75em;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+[data-theme="terminal"] .tab-label.pd-tab-active {
+	color: #00c850;
+	border-bottom: 1px solid #00c850;
+}
+
+/* ─── Table header ───────────────────────────────────────────────────────── */
+[data-theme="terminal"] thead {
+	color: #00c850;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	font-size: 0.72em;
+}
+
+/* ─── Inputs & selects ───────────────────────────────────────────────────── */
+[data-theme="terminal"] .filter-group input[type="text"],
+[data-theme="terminal"] .method-group select,
+[data-theme="terminal"] .cookie-format-row select {
+	background: #111111 !important;
+	border-color: #333333 !important;
+	color: #d8d8d8 !important;
+	font-family: var(--pd-font);
+}
+
+/* ─── Action buttons ─────────────────────────────────────────────────────── */
+[data-theme="terminal"] .action-bar button,
+[data-theme="terminal"] .cookie-btn-row button {
+	font-family: var(--pd-font);
+	font-size: 0.75em;
+	letter-spacing: 0.03em;
+	text-transform: lowercase;
+}
+[data-theme="terminal"] .action-bar button:hover,
+[data-theme="terminal"] .cookie-btn-row button:hover {
+	border-color: #00c850 !important;
+	color: #00c850 !important;
+	background: #0a1a0a !important;
+}
+
+/* ─── Cookie toggle ──────────────────────────────────────────────────────── */
+[data-theme="terminal"] #cookieToggle {
+	font-family: var(--pd-font);
+	font-size: 0.75em;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+}
+
+/* ─── Relay status ───────────────────────────────────────────────────────── */
+[data-theme="terminal"] #primedlStatusBar {
+	font-family: var(--pd-font);
+	font-size: 0.7em;
+	letter-spacing: 0.06em;
+}

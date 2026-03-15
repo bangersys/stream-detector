@@ -2,15 +2,23 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<title>primedl — Options</title>
+		<title>primedl Options</title>
+		<!-- FOUC prevention for options page too -->
+		<script>try{document.documentElement.dataset.theme=localStorage.getItem("pd-theme")||"default"}catch(e){}</script>
+		<link rel="stylesheet" href="css/tokens.css" />
+		<link rel="stylesheet" href="css/themes/terminal.css" />
+		<link rel="stylesheet" href="css/themes/clean-card.css" />
+		<link rel="stylesheet" href="css/themes/compact.css" />
+		<link rel="stylesheet" href="css/themes/dashboard.css" />
+		<link rel="stylesheet" href="css/themes/brutalist.css" />
 		<link rel="stylesheet" href="css/options.css" />
 		<link rel="icon" href="favicon.ico" />
 	</head>
 	<body>
-		<table>
+		<table id="options">
 			<tbody>
 
-				<!-- ── Detection ──────────────────────────────────────── -->
+				<!-- ── Detection ─────────────────────────────────────────── -->
 				<tr>
 					<td><label for="disablePref"></label></td>
 					<td>
@@ -27,6 +35,15 @@
 					<td><label for="filePref"></label></td>
 					<td>
 						<input class="option" id="filePref" type="checkbox" />
+					</td>
+				</tr>
+				<tr>
+					<td><label for="manifestPref"></label></td>
+					<td>
+						<input class="option" id="manifestPref" type="checkbox" />
+						<div class="tipContainer">
+							<span class="tip" id="manifestTip">?</span>
+						</div>
 					</td>
 				</tr>
 				<tr>
@@ -55,21 +72,90 @@
 								type="number"
 								min="1"
 								value="1"
-							/>&nbsp;MB
-						</div>
-					</td>
-				</tr>
-				<tr>
-					<td><label for="manifestPref"></label></td>
-					<td>
-						<input class="option" id="manifestPref" type="checkbox" />
-						<div class="tipContainer">
-							<span class="tip" id="manifestTip">?</span>
+							/>
+							MB
 						</div>
 					</td>
 				</tr>
 
-				<!-- ── Copy / Command ─────────────────────────────────── -->
+				<!-- ── Custom detection ───────────────────────────────────── -->
+				<tr>
+					<td><label for="customExtPref"></label></td>
+					<td>
+						<input class="option" id="customExtPref" type="checkbox" />
+						<div class="tipContainer">
+							<span class="tip" id="customExtTip">?</span>
+						</div>
+						<div>
+							<textarea class="option" id="customExtEntries" rows="3"></textarea>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td><label for="customCtPref"></label></td>
+					<td>
+						<input class="option" id="customCtPref" type="checkbox" />
+						<div class="tipContainer">
+							<span class="tip" id="customCtTip">?</span>
+						</div>
+						<div>
+							<textarea class="option" id="customCtEntries" rows="3"></textarea>
+						</div>
+					</td>
+				</tr>
+
+				<!-- ── Blacklist ──────────────────────────────────────────── -->
+				<tr>
+					<td><label for="blacklistPref"></label></td>
+					<td>
+						<input class="option" id="blacklistPref" type="checkbox" />
+						<div class="tipContainer">
+							<span class="tip" id="blacklistTip">?</span>
+						</div>
+						<div>
+							<textarea class="option" id="blacklistEntries" rows="3"></textarea>
+						</div>
+					</td>
+				</tr>
+
+				<!-- ── Headers ────────────────────────────────────────────── -->
+				<tr>
+					<td><label for="headersPref"></label></td>
+					<td>
+						<input class="option" id="headersPref" type="checkbox" />
+					</td>
+				</tr>
+				<tr>
+					<td><label for="titlePref"></label></td>
+					<td>
+						<input class="option" id="titlePref" type="checkbox" />
+					</td>
+				</tr>
+				<tr>
+					<td><label for="filenamePref"></label></td>
+					<td>
+						<input class="option" id="filenamePref" type="checkbox" />
+					</td>
+				</tr>
+				<tr>
+					<td><label for="timestampPref"></label></td>
+					<td>
+						<input class="option" id="timestampPref" type="checkbox" />
+					</td>
+				</tr>
+				<tr>
+					<td><label for="fileExtension"></label></td>
+					<td>
+						<input
+							class="option"
+							id="fileExtension"
+							type="text"
+							placeholder="ts"
+						/>
+					</td>
+				</tr>
+
+				<!-- ── Copy method ────────────────────────────────────────── -->
 				<tr>
 					<td><label for="copyMethod"></label></td>
 					<td>
@@ -162,77 +248,10 @@
 							type="text"
 							placeholder="replacement"
 						/>
-						<div class="tipContainer">
-							<span class="tip" id="regexCommandTip">?</span>
-						</div>
 					</td>
 				</tr>
 
-				<!-- ── Custom detection ───────────────────────────────── -->
-				<tr>
-					<td><label for="customExtPref"></label></td>
-					<td>
-						<input class="option" id="customExtPref" type="checkbox" />
-						<textarea
-							class="option"
-							id="customExtEntries"
-							placeholder="jpg&#10;png"
-						></textarea>
-						<div class="tipContainer">
-							<span class="tip" id="customExtTip">?</span>
-						</div>
-					</td>
-				</tr>
-				<tr>
-					<td><label for="customCtPref"></label></td>
-					<td>
-						<input class="option" id="customCtPref" type="checkbox" />
-						<textarea
-							class="option"
-							id="customCtEntries"
-							placeholder="image/jpeg&#10;text/html"
-						></textarea>
-						<div class="tipContainer">
-							<span class="tip" id="customCtTip">?</span>
-						</div>
-					</td>
-				</tr>
-
-				<!-- ── Headers / Output ───────────────────────────────── -->
-				<tr>
-					<td><label for="headersPref"></label></td>
-					<td>
-						<input class="option" id="headersPref" type="checkbox" />
-					</td>
-				</tr>
-				<tr>
-					<td><label for="titlePref"></label></td>
-					<td>
-						<input class="option" id="titlePref" type="checkbox" />
-					</td>
-				</tr>
-				<tr>
-					<td><label for="filenamePref"></label></td>
-					<td>
-						<input class="option" id="filenamePref" type="checkbox" />
-					</td>
-				</tr>
-				<tr>
-					<td><label for="timestampPref"></label></td>
-					<td>
-						<input class="option" id="timestampPref" type="checkbox" />
-					</td>
-				</tr>
-				<tr>
-					<td><label for="fileExtension"></label></td>
-					<td>
-						<select class="option" id="fileExtension">
-							<option value="ts">ts</option>
-							<option value="mp4">mp4</option>
-							<option value="mkv">mkv</option>
-						</select>
-					</td>
-				</tr>
+				<!-- ── Tool-specific ─────────────────────────────────────── -->
 				<tr>
 					<td><label for="streamlinkOutput"></label></td>
 					<td>
@@ -266,6 +285,7 @@
 								id="multithreadAmount"
 								type="number"
 								min="2"
+								max="16"
 								value="4"
 							/>
 						</div>
@@ -280,29 +300,13 @@
 								class="option"
 								id="proxyCommand"
 								type="text"
-								placeholder="http://127.0.0.1:1337"
+								placeholder="socks5://127.0.0.1:1080"
 							/>
 						</div>
 					</td>
 				</tr>
 
-				<!-- ── Blacklist ──────────────────────────────────────── -->
-				<tr>
-					<td><label for="blacklistPref"></label></td>
-					<td>
-						<input class="option" id="blacklistPref" type="checkbox" />
-						<textarea
-							class="option"
-							id="blacklistEntries"
-							placeholder="twitter&#10;facebook&#10;HLS"
-						></textarea>
-						<div class="tipContainer">
-							<span class="tip" id="blacklistTip">?</span>
-						</div>
-					</td>
-				</tr>
-
-				<!-- ── Session / Notifications ───────────────────────── -->
+				<!-- ── Session ────────────────────────────────────────────── -->
 				<tr>
 					<td><label for="noRestorePref"></label></td>
 					<td>
@@ -324,6 +328,8 @@
 						</div>
 					</td>
 				</tr>
+
+				<!-- ── Notifications ─────────────────────────────────────── -->
 				<tr>
 					<td><label for="notifDetectPref"></label></td>
 					<td>
@@ -337,7 +343,7 @@
 					</td>
 				</tr>
 
-				<!-- ── primedl Relay ──────────────────────────────────── -->
+				<!-- ── primedl Relay ──────────────────────────────────────── -->
 				<tr>
 					<td><label for="primedlRelayEnabled">primedl relay:</label></td>
 					<td>
@@ -358,7 +364,27 @@
 					</td>
 				</tr>
 
-				<!-- ── Export / Import / Reset ───────────────────────── -->
+				<!-- ── UI Theme ───────────────────────────────────────────── -->
+				<!--
+				  uiTheme is a class="option" element so the existing saveOptionStorage
+				  handler in options.js saves it automatically on change.
+				  theme.js listens via chrome.storage.onChanged and applies live.
+				-->
+				<tr>
+					<td><label for="uiTheme"></label></td>
+					<td>
+						<select class="option" id="uiTheme">
+							<option value="default" data-i18n-opt="themeDefault"></option>
+							<option value="terminal" data-i18n-opt="themeTerminal"></option>
+							<option value="clean-card" data-i18n-opt="themeCleanCard"></option>
+							<option value="compact" data-i18n-opt="themeCompact"></option>
+							<option value="dashboard" data-i18n-opt="themeDashboard"></option>
+							<option value="brutalist" data-i18n-opt="themeBrutalist"></option>
+						</select>
+					</td>
+				</tr>
+
+				<!-- ── Export / Import / Reset ───────────────────────────── -->
 				<tr>
 					<td><label for="exportSettings"></label></td>
 					<td>

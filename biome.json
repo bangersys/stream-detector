@@ -34,7 +34,8 @@
 				"noConsole": { "level": "off", "options": { "allow": ["log"] } }
 			},
 			"complexity": {
-				"noExcessiveCognitiveComplexity": "off"
+				"noExcessiveCognitiveComplexity": "off",
+				"noImportantStyles": "off"
 			}
 		}
 	},

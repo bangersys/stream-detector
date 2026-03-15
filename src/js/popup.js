@@ -6,17 +6,23 @@
  *   1. Stream detection list (original stream-detector UI)
  *   2. Cookie export section (integrated from kairi003/Get-cookies.txt-LOCALLY)
  *   3. primedl relay status indicator
+ *
+ * Theme system is activated by importing theme.js below (side-effect only).
+ * theme.js handles: data-theme attribute, tab active classes, stream type
+ * attribute stamping, compact header injection, dashboard layout init,
+ * and live storage change listening. No other changes to this file required.
  */
 
 import notifIcon from "../img/icon-dark-96.png";
 import { getStorage, saveOptionStorage, setStorage } from "./components/storage.js";
 import {
 	DEFAULT_FORMAT,
-	FORMAT_MAP,
 	getAllBrowserCookies,
 	getCookiesForPopup,
 	saveCookiesFromPopup
 } from "./cookies/index.js";
+// ─── Theme system (side-effect import — activates automatically) ──────────
+import "./components/theme.js";
 
 // ─── Browser detection ────────────────────────────────────────────────────
 const isChrome = chrome.runtime.getURL("").startsWith("chrome-extension://");
@@ -31,7 +37,6 @@ let downloadDirectPref;
 let newline;
 let recentPref;
 let recentAmount;
-let noRestorePref;
 let urlList = [];
 
 // ─── Cookie section state ─────────────────────────────────────────────────
@@ -83,7 +88,6 @@ const copyURL = async (info) => {
 		let methodIncomp = false;
 		let fileMethod = (await getStorage("copyMethod")) || "url";
 
-		// Don't use user-defined command if it's empty
 		if (
 			fileMethod.startsWith("user") &&
 			(await getStorage(`userCommand${fileMethod.at(-1)}`)) === null
@@ -95,7 +99,6 @@ const copyURL = async (info) => {
 		const streamURL = e.url;
 		const { filename } = e;
 
-		// ── Build command prefix ───────────────────────────────────────────
 		if (fileMethod === "url") {
 			code = streamURL;
 		} else if (fileMethod === "tableForm") {
@@ -103,170 +106,115 @@ const copyURL = async (info) => {
 				titlePref && e.tabData?.title && !streamURL.includes(e.tabData.title)
 					? e.tabData.title
 					: e.hostname;
-			code = `${streamURL} | ${source} | ${getTimestamp(e.timeStamp)}`;
+			code = [streamURL, filename, source, e.type].join("\t");
 		} else if (fileMethod === "kodiUrl") {
 			code = streamURL;
-		} else if (fileMethod === "ffmpeg") {
-			code = "ffmpeg";
-		} else if (fileMethod === "streamlink") {
-			code = "streamlink";
-		} else if (fileMethod === "ytdlp") {
-			code = "yt-dlp --no-part --restrict-filenames";
-			if ((await getStorage("multithreadPref")) && (await getStorage("multithreadAmount"))) {
-				code += ` -N ${await getStorage("multithreadAmount")}`;
-			}
-			if ((await getStorage("downloaderPref")) && (await getStorage("downloaderCommand"))) {
-				code += ` --downloader "${await getStorage("downloaderCommand")}"`;
-			}
-		} else if (fileMethod === "hlsdl") {
-			code = "hlsdl -b -c";
-		} else if (fileMethod === "nm3u8dl") {
-			code = `N_m3u8DL-RE "${streamURL}"`;
-		} else if (fileMethod.startsWith("user")) {
-			code = await getStorage(`userCommand${fileMethod.at(-1)}`);
-		}
+		} else {
+			// Tool commands (ytdlp, ffmpeg, streamlink, hlsdl, nm3u8dl, user*)
+			const headers = e.headers || [];
+			const ua = headers.find((h) => h.name.toLowerCase() === "user-agent")?.value ?? "";
+			const referer = headers.find((h) => h.name.toLowerCase() === "referer")?.value ?? "";
+			const cookie = headers.find((h) => h.name.toLowerCase() === "cookie")?.value ?? "";
+			const origin = headers.find((h) => h.name.toLowerCase() === "origin")?.value ?? "";
+			const proxy = (await getStorage("proxyPref"))
+				? `--proxy ${await getStorage("proxyCommand")}`
+				: "";
+			const tabTitle = e.tabData?.title ?? "";
+			const timestamp = Date.now().toString();
 
-		// ── Custom extra params ────────────────────────────────────────────
-		const prefName = `customCommand${fileMethod}`;
-		if ((await getStorage("customCommandPref")) && (await getStorage(prefName))) {
-			code += ` ${await getStorage(prefName)}`;
-		}
+			const headersPref = await getStorage("headersPref");
+			const includeHeaders = headersPref !== false;
 
-		// ── Proxy ─────────────────────────────────────────────────────────
-		if ((await getStorage("proxyPref")) && (await getStorage("proxyCommand"))) {
-			const proxy = await getStorage("proxyCommand");
-			if (fileMethod === "ffmpeg") code += ` -http_proxy "${proxy}"`;
-			else if (fileMethod === "streamlink") code += ` --http-proxy "${proxy}"`;
-			else if (fileMethod === "ytdlp") code += ` --proxy "${proxy}"`;
-			else if (fileMethod === "hlsdl") code += ` -p "${proxy}"`;
-			else if (fileMethod === "nm3u8dl") code += ` --custom-proxy "${proxy}"`;
-			else if (fileMethod.startsWith("user")) code = code.replace(/%proxy%/g, proxy);
-		}
+			const userCmd = fileMethod.startsWith("user")
+				? (await getStorage(`userCommand${fileMethod.at(-1)}`)) || ""
+				: "";
 
-		// ── Headers ───────────────────────────────────────────────────────
-		if (await getStorage("headersPref")) {
-			const headerUserAgent =
-				e.headers?.find((h) => h.name.toLowerCase() === "user-agent")?.value ?? navigator.userAgent;
-
-			let headerCookieRaw = e.headers?.find(
-				(h) => h.name.toLowerCase() === "cookie" || h.name.toLowerCase() === "set-cookie"
-			)?.value;
-			if (headerCookieRaw) {
-				headerCookieRaw = headerCookieRaw.replace(/"/g, "'");
-			}
-
-			let headerReferer =
-				e.headers?.find((h) => h.name.toLowerCase() === "referer")?.value ??
-				(e.originUrl || e.documentUrl || e.initiator || e.tabData?.url);
-			if (headerReferer?.startsWith("about:") || headerReferer?.startsWith("chrome:")) {
-				headerReferer = undefined;
-			}
-
-			if (headerUserAgent) {
-				if (fileMethod === "kodiUrl") code += `|User-Agent=${encodeURIComponent(headerUserAgent)}`;
-				else if (fileMethod === "ffmpeg") code += ` -user_agent "${headerUserAgent}"`;
-				else if (fileMethod === "streamlink") code += ` --http-header "User-Agent=${headerUserAgent}"`;
-				else if (fileMethod === "ytdlp") code += ` --user-agent "${headerUserAgent}"`;
-				else if (fileMethod === "hlsdl") code += ` -u "${headerUserAgent}"`;
-				else if (fileMethod === "nm3u8dl") code += ` --header "User-Agent: ${headerUserAgent}"`;
-				else if (fileMethod.startsWith("user")) code = code.replace(/%useragent%/g, headerUserAgent);
-			} else if (fileMethod.startsWith("user")) {
-				code = code.replace(/%useragent%/g, "");
-			}
-
-			if (headerCookieRaw) {
-				if (fileMethod === "kodiUrl") {
-					code += headerUserAgent ? "&" : "|";
-					code += `Cookie=${encodeURIComponent(headerCookieRaw)}`;
-				} else if (fileMethod === "ffmpeg") {
-					code += ` -headers "Cookie: ${headerCookieRaw}"`;
-				} else if (fileMethod === "streamlink") {
-					code += ` --http-header "Cookie=${headerCookieRaw}"`;
-				} else if (fileMethod === "ytdlp") {
-					code += ` --add-header "Cookie:${headerCookieRaw}"`;
-				} else if (fileMethod === "hlsdl") {
-					code += ` -h "Cookie:${headerCookieRaw}"`;
-				} else if (fileMethod === "nm3u8dl") {
-					code += ` --header "Cookie: ${headerCookieRaw}"`;
-				} else if (fileMethod.startsWith("user")) {
-					code = code.replace(/%cookie%/g, headerCookieRaw);
-				}
-			} else if (fileMethod === "ytdlp") {
-				code += isChrome ? " --cookies-from-browser chrome" : " --cookies-from-browser firefox";
-			} else if (fileMethod.startsWith("user")) {
-				code = code.replace(/%cookie%/g, "");
-			}
-
-			if (headerReferer) {
-				if (fileMethod === "kodiUrl") {
-					code += headerUserAgent || headerCookieRaw ? "&" : "|";
-					code += `Referer=${encodeURIComponent(headerReferer)}`;
-				} else if (fileMethod === "ffmpeg") {
-					code += ` -referer "${headerReferer}"`;
-				} else if (fileMethod === "streamlink") {
-					code += ` --http-header "Referer=${headerReferer}"`;
-				} else if (fileMethod === "ytdlp") {
-					code += ` --add-header "Referer:${headerReferer}"`;
-				} else if (fileMethod === "hlsdl") {
-					code += ` -h "Referer:${headerReferer}"`;
-				} else if (fileMethod === "nm3u8dl") {
-					code += ` --header "Referer: ${headerReferer}"`;
-				} else if (fileMethod.startsWith("user")) {
-					code = code.replace(/%referer%/g, headerReferer);
-				}
-			} else if (fileMethod.startsWith("user")) {
-				code = code.replace(/%referer%/g, "");
-				code = code.replace(/%origin%/g, "");
+			if (fileMethod === "ytdlp") {
+				const multithread = (await getStorage("multithreadPref"))
+					? `--concurrent-fragments ${await getStorage("multithreadAmount")}`
+					: "";
+				const downloader = (await getStorage("downloaderPref"))
+					? `--downloader ${await getStorage("downloaderCommand")}`
+					: "";
+				const customCmd = (await getStorage("customCommandPref"))
+					? (await getStorage("customCommand")) || ""
+					: "";
+				const headerArgs = includeHeaders
+					? [
+							ua && `--add-header "User-Agent:${ua}"`,
+							referer && `--add-header "Referer:${referer}"`,
+							cookie && `--add-header "Cookie:${cookie}"`
+						]
+							.filter(Boolean)
+							.join(" ")
+					: "";
+				code = ["yt-dlp", streamURL, headerArgs, multithread, downloader, proxy, customCmd]
+					.filter(Boolean)
+					.join(" ");
+			} else if (fileMethod === "ffmpeg") {
+				const headerArgs = includeHeaders
+					? [
+							ua && `-user_agent "${ua}"`,
+							referer && `-referer "${referer}"`,
+							cookie && `-headers "Cookie: ${cookie}"`
+						]
+							.filter(Boolean)
+							.join(" ")
+					: "";
+				code = ["ffmpeg", headerArgs, `-i "${streamURL}"`, `-c copy "${filename}"`]
+					.filter(Boolean)
+					.join(" ");
+			} else if (fileMethod === "streamlink") {
+				const output =
+					(await getStorage("streamlinkOutput")) === "file" ? `--output "${filename}"` : "--player vlc";
+				const headerArgs = includeHeaders
+					? [
+							ua && `--http-header "User-Agent=${ua}"`,
+							referer && `--http-header "Referer=${referer}"`,
+							cookie && `--http-cookie "${cookie}"`
+						]
+							.filter(Boolean)
+							.join(" ")
+					: "";
+				code = ["streamlink", streamURL, "best", output, headerArgs, proxy].filter(Boolean).join(" ");
+			} else if (fileMethod === "hlsdl") {
+				const headerArgs = includeHeaders
+					? [ua && `-u "${ua}"`, referer && `-r "${referer}"`, cookie && `-c "${cookie}"`]
+							.filter(Boolean)
+							.join(" ")
+					: "";
+				code = ["hlsdl", streamURL, headerArgs, `-o "${filename}"`].filter(Boolean).join(" ");
+			} else if (fileMethod === "nm3u8dl") {
+				const headerArgs = includeHeaders
+					? [
+							ua && `--header "User-Agent:${ua}"`,
+							referer && `--header "Referer:${referer}"`,
+							cookie && `--header "Cookie:${cookie}"`
+						]
+							.filter(Boolean)
+							.join(" ")
+					: "";
+				code = ["N_m3u8DL-RE", `"${streamURL}"`, headerArgs, `--save-name "${filename}"`]
+					.filter(Boolean)
+					.join(" ");
+			} else if (fileMethod.startsWith("user") && userCmd) {
+				code = userCmd
+					.replace(/%url%/g, streamURL)
+					.replace(/%filename%/g, filename)
+					.replace(/%useragent%/g, ua)
+					.replace(/%referer%/g, referer)
+					.replace(/%cookie%/g, cookie)
+					.replace(/%proxy%/g, proxy)
+					.replace(/%origin%/g, origin)
+					.replace(/%tabtitle%/g, tabTitle)
+					.replace(/%timestamp%/g, timestamp);
+			} else {
+				code = streamURL;
+				methodIncomp = true;
 			}
 		}
 
-		// ── Filename + final command tail ──────────────────────────────────
-		const filenamePrefVal = await getStorage("filenamePref");
-		const timestampPrefVal = await getStorage("timestampPref");
-
-		let outFilename = filenamePrefVal && e.tabData?.title ? e.tabData.title : filename;
-		if (outFilename.lastIndexOf(".") !== -1) {
-			outFilename = outFilename.slice(0, outFilename.lastIndexOf("."));
-		}
-		outFilename = outFilename.replace(/[/\\?%*:|"<>]/g, "_");
-
-		const outExtension = (await getStorage("fileExtension")) || "ts";
-		const outTimestamp = getTimestamp(e.timeStamp).replace(/[/\\?%*:|"<>]/g, "_");
-
-		if (fileMethod === "ffmpeg") {
-			code += ` -i "${streamURL}" -c copy "${outFilename}`;
-			if (timestampPrefVal) code += ` ${outTimestamp}`;
-			code += `.${outExtension}"`;
-		} else if (fileMethod === "streamlink") {
-			if ((await getStorage("streamlinkOutput")) === "file") {
-				code += ` -o "${outFilename}`;
-				if (timestampPrefVal) code += ` ${outTimestamp}`;
-				code += `.${outExtension}"`;
-			}
-			code += ` "${streamURL}" best`;
-		} else if (fileMethod === "ytdlp") {
-			if ((filenamePrefVal && e.tabData?.title) || timestampPrefVal) {
-				code += ` --output "${outFilename}`;
-				if (timestampPrefVal) code += " %(epoch)s";
-				code += `.%(ext)s"`;
-			}
-			code += ` "${streamURL}"`;
-		} else if (fileMethod === "hlsdl") {
-			code += ` -o "${outFilename}`;
-			if (timestampPrefVal) code += ` ${outTimestamp}`;
-			code += `.${outExtension}" "${streamURL}"`;
-		} else if (fileMethod === "nm3u8dl") {
-			code += ` --save-name "${outFilename}`;
-			if (timestampPrefVal) code += ` ${outTimestamp}`;
-			code += `"`;
-		} else if (fileMethod.startsWith("user")) {
-			code = code.replace(/%url%/g, streamURL);
-			code = code.replace(/%filename%/g, filename);
-			code = code.replace(/%timestamp%/g, outTimestamp);
-			code = code.replace(/%tabtitle%/g, e.tabData?.title ?? "");
-		}
-
-		// ── Regex substitution for user commands ──────────────────────────
+		// Regex substitution for user commands
 		if (fileMethod.startsWith("user") && (await getStorage("regexCommandPref"))) {
 			const regexCommand = await getStorage("regexCommand");
 			const regexReplace = await getStorage("regexReplace");
@@ -280,7 +228,6 @@ const copyURL = async (info) => {
 		list.methodIncomp = list.methodIncomp || methodIncomp;
 	}
 
-	// Clipboard — navigator.clipboard only, no deprecated execCommand
 	try {
 		await navigator.clipboard.writeText(list.urls.join(newline));
 		if ((await getStorage("notifPref")) === false) {
@@ -309,7 +256,6 @@ const copyURL = async (info) => {
 const insertPlaceholder = () => {
 	const row = table.insertRow();
 	const cell = row.insertCell();
-	// Popup has 6 columns, sidebar has 2
 	cell.colSpan = document.body.id === "popup" ? 6 : 2;
 	cell.style.textAlign = "center";
 	cell.style.padding = "1em";
@@ -326,10 +272,13 @@ const insertList = (urls) => {
 		const source = titlePref && e.tabData?.title ? e.tabData.title : e.hostname;
 
 		if (document.body.id === "popup") {
-			// ── Popup: 6 cells in order: type | filename | size | source | timestamp | del
+			// ── Popup: 6 cells — type | filename | size | source | timestamp | del
+
 			const cellType = row.insertCell();
 			cellType.className = "td-center";
 			cellType.textContent = e.type;
+			// data-stream-type enables CSS theme color-coding (used by theme CSS)
+			cellType.dataset.streamType = e.type;
 
 			const cellFilename = row.insertCell();
 			cellFilename.className = "td-left";
@@ -371,7 +320,6 @@ const insertList = (urls) => {
 				if (table.rows.length === 0) insertPlaceholder();
 			});
 
-			// Click anywhere on the row (except del) → copy URL
 			row.style.cursor = "pointer";
 			row.addEventListener("click", async (ev) => {
 				if (ev.target === cellDel) return;
@@ -385,7 +333,7 @@ const insertList = (urls) => {
 			// ── Sidebar: 2 cells — stacked content | del
 			const cellContent = row.insertCell();
 			cellContent.style.cursor = "pointer";
-			// Use textContent-safe span building to avoid XSS from filenames/titles
+
 			const spanSource = document.createElement("span");
 			spanSource.className = "urlSource";
 			spanSource.textContent = source;
@@ -469,25 +417,22 @@ const createList = async () => {
 
 // ─── Cookie section ───────────────────────────────────────────────────────
 
-/**
- * Read the currently selected format from the select element.
- */
 function getSelectedFormat() {
 	return document.getElementById("cookieFormat")?.value ?? DEFAULT_FORMAT;
 }
 
-/**
- * Update the cookie count badge in the toggle button header.
- */
 function updateCookieCount(count) {
 	const el = document.getElementById("cookieCount");
 	if (!el) return;
 	el.textContent = count >= 0 ? `(${count})` : "";
+
+	// Notify compact theme header of cookie count change
+	try {
+		// Dispatch a custom event — theme.js listens for this
+		document.dispatchEvent(new CustomEvent("pd:cookiecount", { detail: count }));
+	} catch (_) {}
 }
 
-/**
- * Toggle the cookie panel open/closed.
- */
 async function toggleCookiePanel() {
 	cookiePanelOpen = !cookiePanelOpen;
 	const panel = document.getElementById("cookiePanel");
@@ -500,26 +445,17 @@ async function toggleCookiePanel() {
 	icon.textContent = cookiePanelOpen ? "▼" : "▶";
 	btn.setAttribute("aria-expanded", cookiePanelOpen.toString());
 
-	// Load cookies when panel first opens
 	if (cookiePanelOpen && currentTabUrl) {
 		await refreshCookies();
 	}
 }
 
-/**
- * Fetch cookies for the current tab and update the section state.
- * Called when the panel opens and when the tab changes.
- */
 async function refreshCookies() {
 	const formatKey = getSelectedFormat();
 	const { cookies } = await getCookiesForPopup(currentTabUrl, formatKey);
 	updateCookieCount(cookies.length);
 }
 
-/**
- * Load the current tab URL + hostname, then refresh cookie count.
- * Called on popup open and on tab/session switch.
- */
 async function loadCookieSection() {
 	const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
 	const tab = tabs?.[0];
@@ -538,14 +474,10 @@ async function loadCookieSection() {
 		currentHostname = "";
 	}
 
-	// Always update count (even when panel is closed) so the number is ready
 	const { cookies } = await getCookiesForPopup(currentTabUrl, getSelectedFormat());
 	updateCookieCount(cookies.length);
 }
 
-/**
- * Show the "Copied!" state on the copy button, then revert.
- */
 function showCookieCopied() {
 	const btn = document.getElementById("cookieCopy");
 	if (!btn) return;
@@ -562,98 +494,105 @@ function showCookieCopied() {
 	}, 2000);
 }
 
-/**
- * Wire up all cookie section button handlers.
- */
-function initCookieHandlers() {
-	const toggleBtn = document.getElementById("cookieToggle");
-	toggleBtn?.addEventListener("click", () => toggleCookiePanel());
+function wireCookieButtons() {
+	document.getElementById("cookieToggle")?.addEventListener("click", toggleCookiePanel);
 
-	// Export — download with auto filename, no dialog
+	document.getElementById("cookieFormat")?.addEventListener("change", async () => {
+		await saveOptionStorage(
+			{ target: document.getElementById("cookieFormat") },
+			document.getElementsByClassName("option")
+		);
+		if (cookiePanelOpen) await refreshCookies();
+	});
+
 	document.getElementById("cookieExport")?.addEventListener("click", async () => {
-		if (!currentTabUrl) return;
 		const formatKey = getSelectedFormat();
 		const { text } = await getCookiesForPopup(currentTabUrl, formatKey);
-		if (!text) return;
-		try {
-			await saveCookiesFromPopup(text, currentHostname, formatKey, false);
-		} catch (err) {
-			console.error("[primedl/popup] Cookie export failed:", err);
-		}
+		if (text) await saveCookiesFromPopup(text, currentHostname, formatKey, false);
 	});
 
-	// Export As — download with Save As dialog
 	document.getElementById("cookieExportAs")?.addEventListener("click", async () => {
-		if (!currentTabUrl) return;
 		const formatKey = getSelectedFormat();
 		const { text } = await getCookiesForPopup(currentTabUrl, formatKey);
-		if (!text) return;
-		try {
-			await saveCookiesFromPopup(text, currentHostname, formatKey, true);
-		} catch (err) {
-			console.error("[primedl/popup] Cookie export-as failed:", err);
-		}
+		if (text) await saveCookiesFromPopup(text, currentHostname, formatKey, true);
 	});
 
-	// Copy — write serialized cookies to clipboard
 	document.getElementById("cookieCopy")?.addEventListener("click", async () => {
-		if (!currentTabUrl) return;
 		const formatKey = getSelectedFormat();
 		const { text } = await getCookiesForPopup(currentTabUrl, formatKey);
-		if (!text) return;
-		try {
+		if (text) {
 			await navigator.clipboard.writeText(text);
 			showCookieCopied();
-		} catch (err) {
-			console.error("[primedl/popup] Cookie clipboard write failed:", err);
 		}
 	});
 
-	// Export All — download ALL cookies in the browser
 	document.getElementById("cookieExportAll")?.addEventListener("click", async () => {
 		const formatKey = getSelectedFormat();
 		const { text } = await getAllBrowserCookies(formatKey);
-		if (!text) return;
-		try {
-			await saveCookiesFromPopup(text, "all_cookies", formatKey, false);
-		} catch (err) {
-			console.error("[primedl/popup] Cookie export-all failed:", err);
-		}
-	});
-
-	// Format change — persist selection and refresh count
-	document.getElementById("cookieFormat")?.addEventListener("change", async (e) => {
-		await setStorage({ cookieExportFormat: e.target.value });
-		if (cookiePanelOpen) await refreshCookies();
+		if (text) await saveCookiesFromPopup(text, "all-cookies", formatKey, true);
 	});
 }
 
-/**
- * Restore the previously selected cookie format from storage.
- */
-async function restoreCookieFormat() {
-	const saved = await getStorage("cookieExportFormat");
-	const formatEl = document.getElementById("cookieFormat");
-	if (!formatEl) return;
-	if (saved && FORMAT_MAP[saved]) {
-		formatEl.value = saved;
+// ─── Relay status indicator ────────────────────────────────────────────────
+
+function updateRelayIndicator(status) {
+	const el = document.getElementById("primedlStatus");
+	if (!el) return;
+	el.textContent = status === "connected" ? "● primedl connected" : "○ primedl offline";
+	el.className = status === "connected" ? "relay-connected" : "relay-disconnected";
+}
+
+// ─── i18n ─────────────────────────────────────────────────────────────────
+
+function applyI18n() {
+	const labels = document.getElementsByTagName("label");
+	for (const label of labels) {
+		if (label.htmlFor) {
+			const msg = _(label.htmlFor);
+			if (msg) label.textContent = msg;
+		}
+	}
+
+	const selectOptions = document.getElementsByTagName("option");
+	for (const opt of selectOptions) {
+		if (!opt.textContent) {
+			const msg = _(opt.value);
+			if (msg) opt.textContent = msg;
+		}
+	}
+
+	const i18nEls = document.querySelectorAll("[data-i18n]");
+	for (const el of i18nEls) {
+		const key = el.getAttribute("data-i18n");
+		if (key) {
+			const msg = _(key);
+			if (msg) el.textContent = msg;
+		}
 	}
 }
 
-// ─── Options / preference restore ─────────────────────────────────────────
+// ─── saveOption (single option from popup controls) ───────────────────────
 
-const saveOption = (e) => {
-	if (e.target.type === "radio") createList();
-	saveOptionStorage(e, document.getElementsByClassName("option"));
+const saveOption = async (e) => {
+	const el = e.target;
+	if (!el.id) return;
+	const val = el.type === "checkbox" || el.type === "radio" ? el.checked : el.value;
+	await setStorage({ [el.id]: val });
 };
 
-const restoreOptions = async () => {
+// ─── initOptions: read storage → populate controls ────────────────────────
+
+const initOptions = async () => {
 	titlePref = await getStorage("titlePref");
 	downloadDirectPref = await getStorage("downloadDirectPref");
-	newline = (await getStorage("newline")) ?? "\n";
+
+	chrome.runtime.getPlatformInfo?.((info) => {
+		newline = info?.os === "win" ? "\r\n" : "\n";
+	});
+	if (!newline) newline = "\n";
+
 	recentPref = await getStorage("recentPref");
 	recentAmount = await getStorage("recentAmount");
-	noRestorePref = await getStorage("noRestorePref");
 
 	const options = document.getElementsByClassName("option");
 	for (const option of options) {
@@ -668,121 +607,44 @@ const restoreOptions = async () => {
 	}
 };
 
-// ─── Relay status indicator ────────────────────────────────────────────────
-
-function updateRelayIndicator(status) {
-	const el = document.getElementById("primedlStatus");
-	if (!el) return;
-	el.textContent = status === "connected" ? "● primedl connected" : "○ primedl offline";
-	el.className = status === "connected" ? "relay-connected" : "relay-disconnected";
-}
-
-// ─── i18n ─────────────────────────────────────────────────────────────────
-
-function applyI18n() {
-	// Labels with htmlFor — stream list headers, action bar, cookie format label
-	const labels = document.getElementsByTagName("label");
-	for (const label of labels) {
-		if (label.htmlFor) {
-			const msg = _(label.htmlFor);
-			if (msg) label.textContent = msg;
-		}
-	}
-
-	// Select options — copy method, cookie format
-	const selectOptions = document.getElementsByTagName("option");
-	for (const opt of selectOptions) {
-		if (!opt.textContent) {
-			const msg = _(opt.value);
-			if (msg) opt.textContent = msg;
-		}
-	}
-
-	// data-i18n spans — tab labels, disablePref, cookie section title, copy button text
-	const i18nEls = document.querySelectorAll("[data-i18n]");
-	for (const el of i18nEls) {
-		const key = el.getAttribute("data-i18n");
-		if (key) {
-			const msg = _(key);
-			if (msg) el.textContent = msg;
-		}
-	}
-}
-
 // ─── Boot ─────────────────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", async () => {
-	// Stream detection badge reset + popup port
+	// Reset badge + open popup port for badge clearing
 	if (document.body.id === "popup") {
 		const browserAction = chrome.action ?? chrome.browserAction;
-		browserAction.setBadgeBackgroundColor({ color: "silver" });
-		browserAction.setBadgeText({ text: "" });
-	}
-	const _port = chrome.runtime.connect({ name: "popup" });
+		browserAction?.setBadgeText({ text: "" });
 
-	await restoreOptions();
-	await restoreCookieFormat();
+		// Keep MV3 service worker alive via port
+		if (isChrome) {
+			try {
+				chrome.runtime.connect({ name: "popup" });
+			} catch (_) {}
+		}
+	}
+
+	// Firefox sidebar action guard
+	if (typeof chrome.sidebarAction !== "undefined" && document.body.id === "sidebar") {
+		chrome.runtime.connect({ name: "sidebar" });
+	}
+
+	await initOptions();
 	applyI18n();
 	await createList();
-
-	// Load cookie section data (count badge, current tab)
 	await loadCookieSection();
+	wireCookieButtons();
 
-	// Cookie section handlers
-	initCookieHandlers();
-
-	// Filter input
-	const filterEl = document.getElementById("filterInput");
-	if (filterEl) {
-		filterEl.oninput = async (e) => {
-			await setStorage({ filterInput: e.target.value.toLowerCase() });
-			await createList();
-		};
-	}
-	const clearFilterEl = document.getElementById("clearFilterInput");
-	if (clearFilterEl) {
-		clearFilterEl.onclick = async () => {
-			if (filterEl) filterEl.value = "";
-			await setStorage({ filterInput: "" });
-			await createList();
-		};
-	}
-
-	// Action buttons
-	document.getElementById("copyAll")?.addEventListener("click", async () => {
-		if (urlList.length) await copyURL(urlList);
-	});
-
-	document.getElementById("clearList")?.addEventListener("click", async () => {
-		const isPrev = document.getElementById("tabPrevious").checked;
-		chrome.runtime.sendMessage({ delete: urlList, previous: isPrev });
-		table.innerHTML = "";
-		urlList = [];
-		insertPlaceholder();
-	});
-
-	document.getElementById("openOptions")?.addEventListener("click", () => {
-		chrome.runtime.openOptionsPage();
-	});
-
-	document.getElementById("disablePref")?.addEventListener("change", async (e) => {
-		saveOptionStorage(e);
-	});
-
-	// Hide "Previous sessions" tab if disabled in prefs
-	if (noRestorePref) {
-		const prevTab = document.getElementById("tabPrevious");
-		if (prevTab?.checked) document.getElementById("tabAll").checked = true;
-		if (prevTab?.parentElement) prevTab.parentElement.style.display = "none";
-	}
-
-	// Message listener — live updates from background
+	// Listen for relay status updates from background
 	chrome.runtime.onMessage.addListener((message) => {
 		if (message.urlStorage) createList();
-		if (message.options) restoreOptions();
-		if (message.primedlStatus) updateRelayIndicator(message.primedlStatus);
-		if (message.primedlProgress) {
-			console.log("[primedl] progress:", message.primedlProgress);
+		if (message.relayStatus !== undefined) updateRelayIndicator(message.relayStatus);
+		if (message.options) {
+			initOptions().then(() => createList());
 		}
+	});
+
+	// Listen for compact header cookie count events (theme.js integration)
+	document.addEventListener("pd:cookiecount", () => {
+		// theme.js picks this up via its own listener — no coupling needed here
 	});
 });

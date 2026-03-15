@@ -1,3 +1,8 @@
+/**
+ * primedl — components/defaults.js
+ * Default values written to chrome.storage.local on first run.
+ * All keys are written only if not already present (non-destructive).
+ */
 const defaults = {
 	// Detection prefs
 	disablePref: false,
@@ -64,6 +69,14 @@ const defaults = {
 
 	// Cookie export
 	cookieExportFormat: "netscape",
+
+	// ─── UI Theme ─────────────────────────────────────────────────────────
+	// Pluggable theme key. Corresponds to the CSS [data-theme] selector.
+	// Valid values: "default" | "terminal" | "clean-card" | "compact" |
+	//               "dashboard" | "brutalist"
+	// New themes can be added without changing this file — just ensure
+	// theme.js and the CSS files are updated accordingly.
+	uiTheme: "default",
 
 	// Internal — managed by background.js
 	urlStorageRestore: [],

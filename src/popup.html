@@ -3,6 +3,21 @@
 	<head>
 		<meta charset="UTF-8" />
 		<title>primedl</title>
+		<!--
+		  FOUC prevention: set data-theme before any CSS is parsed.
+		  localStorage holds the last-used theme as a synchronous cache.
+		  theme.js will async-confirm from chrome.storage and update if needed.
+		-->
+		<script>try{document.documentElement.dataset.theme=localStorage.getItem("pd-theme")||"default"}catch(e){}</script>
+		<!-- 1. Token layer (defines all --pd-* custom properties) -->
+		<link rel="stylesheet" href="css/tokens.css" />
+		<!-- 2. Theme overrides (each file scoped to [data-theme="X"]) -->
+		<link rel="stylesheet" href="css/themes/terminal.css" />
+		<link rel="stylesheet" href="css/themes/clean-card.css" />
+		<link rel="stylesheet" href="css/themes/compact.css" />
+		<link rel="stylesheet" href="css/themes/dashboard.css" />
+		<link rel="stylesheet" href="css/themes/brutalist.css" />
+		<!-- 3. Structural styles (uses var(--pd-*) only, no hardcoded colors) -->
 		<link rel="stylesheet" href="css/popup.css" />
 		<link rel="icon" href="favicon.ico" />
 	</head>

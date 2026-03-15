@@ -295,5 +295,29 @@
 	},
 	"cookieExportAll": {
 		"message": "全てエクスポート"
+	},
+	"uiTheme": {
+		"message": "テーマ"
+	},
+	"uiThemeTip": {
+		"message": "ポップアップとサイドバーの外観を選択します。変更はすぐに反映されます。"
+	},
+	"themeDefault": {
+		"message": "デフォルト"
+	},
+	"themeTerminal": {
+		"message": "ターミナルダーク"
+	},
+	"themeCleanCard": {
+		"message": "カード / タブ"
+	},
+	"themeCompact": {
+		"message": "コンパクト"
+	},
+	"themeDashboard": {
+		"message": "ダッシュボード"
+	},
+	"themeBrutalist": {
+		"message": "モノブルータリスト"
 	}
 }

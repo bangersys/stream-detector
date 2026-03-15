@@ -1,0 +1,92 @@
+/**
+ * primedl — tokens.css
+ *
+ * Design token layer. Defines every --pd-* CSS custom property.
+ * popup.css and sidebar.css reference ONLY these tokens — no hardcoded colors.
+ * Theme files (css/themes/*.css) override tokens on [data-theme="X"] selectors.
+ *
+ * Load order in HTML:
+ *   1. tokens.css        ← this file (defaults + dark-mode for "default" theme)
+ *   2. themes/*.css      ← per-theme overrides
+ *   3. popup.css         ← structural styles using var(--pd-*)
+ *
+ * Adding a new theme: create css/themes/my-theme.css, override --pd-* on
+ * [data-theme="my-theme"], add the value to the uiTheme select in options.html,
+ * add i18n keys, and list the CSS file in popup.html / sidebar.html.
+ * Zero changes to any JS logic required.
+ */
+
+/* ─── Default / Light ────────────────────────────────────────────────────── */
+:root,
+[data-theme="default"] {
+	/* Surfaces */
+	--pd-bg: #ffffff;
+	--pd-fg: #202023;
+	--pd-bg-2: #f5f5f5;
+	--pd-bg-hover: #f0f0f3;
+
+	/* Borders */
+	--pd-border: gainsboro;
+	--pd-border-input: #cccccc;
+	--pd-border-strong: #bbbbbb;
+
+	/* Typography */
+	--pd-font:
+		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell,
+		"Helvetica Neue", Arial, sans-serif;
+	--pd-font-mono: ui-monospace, "Cascadia Code", "Fira Mono", "Consolas", monospace;
+
+	/* Shape */
+	--pd-radius: 3px;
+	--pd-radius-md: 6px;
+	--pd-radius-lg: 10px;
+
+	/* Accent (active tabs, focus rings) */
+	--pd-accent: #4a7fd4;
+	--pd-accent-fg: #ffffff;
+
+	/* Relay status */
+	--pd-relay-on: #2a7a2a;
+	--pd-relay-off: #999999;
+
+	/* Cookie copy feedback */
+	--pd-cookie-ok-bg: #d4edda;
+	--pd-cookie-ok-bd: #c3e6cb;
+	--pd-cookie-ok-fg: #155724;
+
+	/* Stream type tag (default: unstyled — themed via [data-theme]) */
+	--pd-tag-bg: transparent;
+	--pd-tag-bd: transparent;
+	--pd-tag-radius: 2px;
+	--pd-tag-font-weight: normal;
+
+	/* Compact theme header (unused in default — defined so themes inherit) */
+	--pd-header-bg: #4a7fd4;
+	--pd-header-fg: #ffffff;
+	--pd-header-pill-bg: rgba(0, 0, 0, 0.15);
+}
+
+/* ─── Default / Dark (OS preference only) ────────────────────────────────── */
+/*
+ * Only applies when no explicit [data-theme] is set OR theme is "default".
+ * Themes that are inherently dark (terminal) ignore this entirely.
+ */
+@media (prefers-color-scheme: dark) {
+	:root,
+	[data-theme="default"] {
+		--pd-bg: #202023;
+		--pd-fg: #e8e8ec;
+		--pd-bg-2: #2c2c30;
+		--pd-bg-hover: #2c2c30;
+		--pd-border: #3a3a3f;
+		--pd-border-input: #444444;
+		--pd-border-strong: #555555;
+
+		--pd-relay-on: #5cb85c;
+		--pd-relay-off: #666666;
+
+		--pd-cookie-ok-bg: #1a3a27;
+		--pd-cookie-ok-bd: #2a5f3a;
+		--pd-cookie-ok-fg: #6fcf97;
+	}
+}

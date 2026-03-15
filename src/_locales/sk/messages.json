@@ -295,5 +295,29 @@
 	},
 	"cookieExportAll": {
 		"message": "Exportovať všetko"
+	},
+	"uiTheme": {
+		"message": "Téma"
+	},
+	"uiThemeTip": {
+		"message": "Vyberte vizuálny štýl pre vyskakovacie okno a bočný panel. Zmeny sa aplikujú okamžite."
+	},
+	"themeDefault": {
+		"message": "Predvolená"
+	},
+	"themeTerminal": {
+		"message": "Terminal Dark"
+	},
+	"themeCleanCard": {
+		"message": "Karty / Záložky"
+	},
+	"themeCompact": {
+		"message": "Kompaktná"
+	},
+	"themeDashboard": {
+		"message": "Dashboard"
+	},
+	"themeBrutalist": {
+		"message": "Mono Brutalist"
 	}
 }
