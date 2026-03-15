@@ -16,8 +16,60 @@
  * Zero changes to any JS logic required.
  */
 
-/* ─── Default / Light ────────────────────────────────────────────────────── */
-:root,
+/* ─── Default / Terminal Dark ────────────────────────────────────────────── */
+:root {
+	/* Surfaces */
+	--pd-bg: #0a0a0a;
+	--pd-fg: #d8d8d8;
+	--pd-bg-2: #111111;
+	--pd-bg-hover: #0d200d;
+
+	/* Borders */
+	--pd-border: #222222;
+	--pd-border-input: #333333;
+	--pd-border-strong: #444444;
+
+	/* Typography */
+	--pd-font: "DM Mono", ui-monospace, "Cascadia Code", "Fira Mono", "Consolas", monospace;
+	--pd-font-mono: ui-monospace, "Cascadia Code", "Fira Mono", "Consolas", monospace;
+
+	/* Shape */
+	--pd-radius: 2px;
+	--pd-radius-md: 2px;
+	--pd-radius-lg: 3px;
+
+	/* Accent (active tabs, focus rings) */
+	--pd-accent: #00c850;
+	--pd-accent-fg: #000000;
+
+	/* Relay status */
+	--pd-relay-on: #00c850;
+	--pd-relay-off: #444444;
+
+	/* Cookie copy feedback */
+	--pd-cookie-ok-bg: #0a2015;
+	--pd-cookie-ok-bd: #00c850;
+	--pd-cookie-ok-fg: #00c850;
+
+	/*
+	 * Stream type tag tokens — used by popup.css on td[data-stream-type].
+	 * Override in a theme file to give stream type cells consistent theming
+	 * without needing to repeat td[data-stream-type] selectors per theme.
+	 * Individual color overrides per type (HLS=green, DASH=amber, etc.) are
+	 * still done with td[data-stream-type="HLS"] selectors in each theme file.
+	 */
+	--pd-tag-bg: transparent;
+	--pd-tag-bd: transparent;
+	--pd-tag-radius: 0px;
+	--pd-tag-font-weight: 700;
+
+	/* Compact theme header (unused in default — defined so themes inherit) */
+	--pd-header-bg: #4a7fd4;
+	--pd-header-fg: #ffffff;
+	--pd-header-pill-bg: rgba(0, 0, 0, 0.15);
+}
+
+/* ─── White / Legacy Theme ────────────────────────────────────────────────── */
 [data-theme="default"] {
 	/* Surfaces */
 	--pd-bg: #ffffff;
@@ -34,7 +86,6 @@
 	--pd-font:
 		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell,
 		"Helvetica Neue", Arial, sans-serif;
-	--pd-font-mono: ui-monospace, "Cascadia Code", "Fira Mono", "Consolas", monospace;
 
 	/* Shape */
 	--pd-radius: 3px;
@@ -54,22 +105,13 @@
 	--pd-cookie-ok-bd: #c3e6cb;
 	--pd-cookie-ok-fg: #155724;
 
-	/*
-	 * Stream type tag tokens — used by popup.css on td[data-stream-type].
-	 * Override in a theme file to give stream type cells consistent theming
-	 * without needing to repeat td[data-stream-type] selectors per theme.
-	 * Individual color overrides per type (HLS=green, DASH=amber, etc.) are
-	 * still done with td[data-stream-type="HLS"] selectors in each theme file.
-	 */
 	--pd-tag-bg: transparent;
 	--pd-tag-bd: transparent;
 	--pd-tag-radius: 2px;
 	--pd-tag-font-weight: normal;
 
-	/* Compact theme header (unused in default — defined so themes inherit) */
 	--pd-header-bg: #4a7fd4;
 	--pd-header-fg: #ffffff;
-	--pd-header-pill-bg: rgba(0, 0, 0, 0.15);
 }
 
 /* ─── Default / Dark (OS preference only) ────────────────────────────────── */

@@ -536,6 +536,63 @@ function wireCookieButtons() {
 	});
 }
 
+function wireActionButtons() {
+	document.getElementById("copyAll")?.addEventListener("click", async () => {
+		const rows = table.querySelectorAll("tr");
+		const visibleUrls = [];
+		for (const row of rows) {
+			if (row.id && row.style.display !== "none") {
+				const entry = urlList.find((u) => u.timestamp.toString() === row.id);
+				if (entry) visibleUrls.push(entry);
+			}
+		}
+		if (visibleUrls.length > 0) {
+			const command = await buildCommand(visibleUrls);
+			await navigator.clipboard.writeText(command);
+			chrome.notifications.create({
+				type: "basic",
+				iconUrl: notifIcon,
+				title: _("notifCopiedTitle"),
+				message: _("notifCopiedText") + visibleUrls.map((u) => u.url).join("\n")
+			});
+		}
+	});
+
+	document.getElementById("clearList")?.addEventListener("click", async () => {
+		const tabId = (await chrome.tabs.query({ active: true, currentWindow: true }))[0].id;
+		if (document.getElementById("tabThis").checked) {
+			urlList = urlList.filter((u) => u.tabId !== tabId);
+		} else if (document.getElementById("tabAll").checked) {
+			urlList = [];
+		} else if (document.getElementById("tabPrevious").checked) {
+			await setStorage({ urlStorageRestore: [] });
+		}
+		await setStorage({ urlStorage: urlList });
+		createList();
+	});
+
+	document.getElementById("openOptions")?.addEventListener("click", () => {
+		chrome.runtime.openOptionsPage();
+	});
+
+	document.getElementById("clearFilterInput")?.addEventListener("click", () => {
+		const filter = document.getElementById("filterInput");
+		if (filter) {
+			filter.value = "";
+			createList();
+		}
+	});
+
+	document.getElementById("filterInput")?.addEventListener("input", createList);
+
+	["tabThis", "tabAll", "tabPrevious"].forEach((id) => {
+		document.getElementById(id)?.addEventListener("change", async () => {
+			createList();
+			await loadCookieSection();
+		});
+	});
+}
+
 // ─── Relay status indicator ────────────────────────────────────────────────
 
 function updateRelayIndicator(status) {
@@ -635,6 +692,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 	await createList();
 	await loadCookieSection();
 	wireCookieButtons();
+	wireActionButtons();
 
 	// Listen for relay status updates from background
 	chrome.runtime.onMessage.addListener((message) => {

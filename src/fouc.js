@@ -17,8 +17,8 @@
  * Do not add imports, exports, or any async code here.
  */
 try {
-	const theme = localStorage.getItem("pd-theme");
-	if (theme) document.documentElement.dataset.theme = theme;
+	const theme = localStorage.getItem("pd-theme") || "terminal";
+	document.documentElement.dataset.theme = theme;
 } catch (_) {
 	// localStorage may be unavailable in some sandboxed contexts — not fatal.
 	// theme.js will apply the correct theme from chrome.storage after load.

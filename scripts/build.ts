@@ -28,7 +28,7 @@ const DIST_CR = path.resolve("dist-chrome");
 
 const JS_ENTRIES = ["src/js/background.js", "src/js/popup.js", "src/js/options.js"];
 
-const STATIC_DIRS = ["css", "img", "_locales"];
+const STATIC_DIRS = ["css", "img", "_locales", "themes"];
 // fouc.js: synchronous FOUC-prevention script, must NOT be bundled as ESM.
 // Chrome MV3 CSP blocks inline scripts so it must be an external static file.
 const STATIC_FILES = ["popup.html", "sidebar.html", "options.html", "fouc.js", "favicon.ico"];
@@ -40,9 +40,9 @@ async function buildTarget(target: "firefox" | "chrome") {
 
 	console.log(`\n[primedl] Building ${target} → ${outDir}`);
 
+	// Clean and recreate output directory
 	await rm(outDir, { recursive: true, force: true });
 	await mkdir(outDir, { recursive: true });
-	await mkdir(path.join(outDir, "js"), { recursive: true });
 
 	// Bundle main JS
 	const result = await Bun.build({
@@ -77,24 +77,28 @@ async function buildTarget(target: "firefox" | "chrome") {
 		throw new Error(`Content script build failed for ${target}`);
 	}
 
-	// Copy manifest — Bun native
-	await Bun.write(path.join(outDir, "manifest.json"), await Bun.file(manifestSrc).text());
+	// Copy manifest — use cp for byte-perfect copy
+	await cp(manifestSrc, path.join(outDir, "manifest.json"));
 
 	// Copy static files
 	for (const file of STATIC_FILES) {
+		const srcPath = path.join(SRC, file);
+		const destPath = path.join(outDir, file);
 		try {
-			await cp(path.join(SRC, file), path.join(outDir, file));
-		} catch {
-			/* optional */
+			await cp(srcPath, destPath);
+		} catch (e) {
+			console.error(`[build error] Could not copy file ${file}:`, e);
 		}
 	}
 
 	// Copy static dirs
 	for (const dir of STATIC_DIRS) {
+		const srcPath = path.join(SRC, dir);
+		const destPath = path.join(outDir, dir);
 		try {
-			await cp(path.join(SRC, dir), path.join(outDir, dir), { recursive: true });
-		} catch {
-			/* optional */
+			await cp(srcPath, destPath, { recursive: true });
+		} catch (e) {
+			console.error(`[build error] Could not copy directory ${dir}:`, e);
 		}
 	}
 

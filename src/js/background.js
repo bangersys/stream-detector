@@ -15,20 +15,6 @@
  *   [6] Cookie extraction integrated into detection flow
  */
 
-import iconDark16 from "../img/icon-dark-16.png";
-import iconDark48 from "../img/icon-dark-48.png";
-import iconDark96 from "../img/icon-dark-96.png";
-import iconDarkEnabled16 from "../img/icon-dark-enabled-16.png";
-import iconDarkEnabled48 from "../img/icon-dark-enabled-48.png";
-import iconDarkEnabled96 from "../img/icon-dark-enabled-96.png";
-
-// ─── Icon imports (handled by Bun bundler as data URLs) ───────────────────
-import iconLight16 from "../img/icon-light-16.png";
-import iconLight48 from "../img/icon-light-48.png";
-import iconLight96 from "../img/icon-light-96.png";
-import iconLightEnabled16 from "../img/icon-light-enabled-16.png";
-import iconLightEnabled48 from "../img/icon-light-enabled-48.png";
-import iconLightEnabled96 from "../img/icon-light-enabled-96.png";
 import { getCookiesForUrl } from "./components/cookies.js";
 import defaults from "./components/defaults.js";
 import { reconnect as relayReconnect, sendDetection, setRelayEnabled } from "./components/relay.js";
@@ -102,17 +88,17 @@ const updateIcons = () => {
 	if (disablePref !== true) {
 		browserAction.setIcon({
 			path: {
-				16: isDarkMode() ? iconDarkEnabled16 : iconLightEnabled16,
-				48: isDarkMode() ? iconDarkEnabled48 : iconLightEnabled48,
-				96: isDarkMode() ? iconDarkEnabled96 : iconLightEnabled96
+				16: isDarkMode() ? "img/icon-dark-enabled-16.png" : "img/icon-light-enabled-16.png",
+				48: isDarkMode() ? "img/icon-dark-enabled-48.png" : "img/icon-light-enabled-48.png",
+				96: isDarkMode() ? "img/icon-dark-enabled-96.png" : "img/icon-light-enabled-96.png"
 			}
 		});
 	} else {
 		browserAction.setIcon({
 			path: {
-				16: isDarkMode() ? iconDark16 : iconLight16,
-				48: isDarkMode() ? iconDark48 : iconLight48,
-				96: isDarkMode() ? iconDark96 : iconLight96
+				16: isDarkMode() ? "img/icon-dark-16.png" : "img/icon-light-16.png",
+				48: isDarkMode() ? "img/icon-dark-48.png" : "img/icon-light-48.png",
+				96: isDarkMode() ? "img/icon-dark-96.png" : "img/icon-light-96.png"
 			}
 		});
 	}

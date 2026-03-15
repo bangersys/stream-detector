@@ -76,7 +76,7 @@ const defaults = {
 	//               "dashboard" | "brutalist"
 	// New themes can be added without changing this file — just ensure
 	// theme.js and the CSS files are updated accordingly.
-	uiTheme: "default",
+	uiTheme: "terminal",
 
 	// Internal — managed by background.js
 	urlStorageRestore: [],
