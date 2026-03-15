@@ -11,6 +11,12 @@
  * theme.js handles: data-theme attribute, tab active classes, stream type
  * attribute stamping, compact header injection, dashboard layout init,
  * and live storage change listening. No other changes to this file required.
+ *
+ * Coordination with theme.js:
+ *   - updateCookieCount() dispatches "pd:cookiecount" for the compact header
+ *   - DOMContentLoaded sets window.__pdPopupReady + dispatches "pd:popup-ready"
+ *     so theme.js can safely trigger cookie panel open after all listeners
+ *     are wired (fixes the dashboard cookiePanelOpen state desync)
  */
 
 import notifIcon from "../img/icon-dark-96.png";
@@ -277,7 +283,7 @@ const insertList = (urls) => {
 			const cellType = row.insertCell();
 			cellType.className = "td-center";
 			cellType.textContent = e.type;
-			// data-stream-type enables CSS theme color-coding (used by theme CSS)
+			// data-stream-type enables CSS theme color-coding via theme.js observer
 			cellType.dataset.streamType = e.type;
 
 			const cellFilename = row.insertCell();
@@ -423,14 +429,11 @@ function getSelectedFormat() {
 
 function updateCookieCount(count) {
 	const el = document.getElementById("cookieCount");
-	if (!el) return;
-	el.textContent = count >= 0 ? `(${count})` : "";
+	if (el) el.textContent = count >= 0 ? `(${count})` : "";
 
-	// Notify compact theme header of cookie count change
-	try {
-		// Dispatch a custom event — theme.js listens for this
-		document.dispatchEvent(new CustomEvent("pd:cookiecount", { detail: count }));
-	} catch (_) {}
+	// Notify compact theme header — theme.js listens for this event
+	// to update the live cookie count pill in the compact header bar.
+	document.dispatchEvent(new CustomEvent("pd:cookiecount", { detail: count >= 0 ? count : 0 }));
 }
 
 async function toggleCookiePanel() {
@@ -571,7 +574,7 @@ function applyI18n() {
 	}
 }
 
-// ─── saveOption (single option from popup controls) ───────────────────────
+// ─── saveOption ───────────────────────────────────────────────────────────
 
 const saveOption = async (e) => {
 	const el = e.target;
@@ -580,7 +583,7 @@ const saveOption = async (e) => {
 	await setStorage({ [el.id]: val });
 };
 
-// ─── initOptions: read storage → populate controls ────────────────────────
+// ─── initOptions ──────────────────────────────────────────────────────────
 
 const initOptions = async () => {
 	titlePref = await getStorage("titlePref");
@@ -615,7 +618,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 		const browserAction = chrome.action ?? chrome.browserAction;
 		browserAction?.setBadgeText({ text: "" });
 
-		// Keep MV3 service worker alive via port
 		if (isChrome) {
 			try {
 				chrome.runtime.connect({ name: "popup" });
@@ -643,8 +645,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 		}
 	});
 
-	// Listen for compact header cookie count events (theme.js integration)
-	document.addEventListener("pd:cookiecount", () => {
-		// theme.js picks this up via its own listener — no coupling needed here
-	});
+	// ── FIX P3: signal theme.js that all event listeners are now wired ────
+	// theme.js's initDashboard() listens for this to safely click the cookie
+	// toggle (ensuring cookiePanelOpen state is managed by toggleCookiePanel).
+	// window.__pdPopupReady guards against the race where this fires before
+	// theme.js's IIFE has registered the pd:popup-ready listener.
+	window.__pdPopupReady = true;
+	document.dispatchEvent(new CustomEvent("pd:popup-ready"));
 });

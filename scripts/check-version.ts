@@ -12,10 +12,14 @@
  * Usage:
  *   bun run check-version         → check only, exit 1 on mismatch
  *   bun run sync-version           → fix mismatches, promote to highest version
+ *
+ * File I/O strategy:
+ *   - Bun.file(path).json() for reads — native Bun API, faster than readFileSync
+ *   - Bun.write(path, content) for writes — native Bun API, faster than writeFileSync
+ *   - node:path for path operations — no Bun alternative
  */
 
-import { readFileSync, writeFileSync } from "fs";
-import path from "path";
+import path from "node:path";
 
 const ROOT = path.resolve(import.meta.dir, "..");
 const FIX_MODE = process.argv.includes("--fix");
@@ -27,12 +31,13 @@ const MANIFEST_CR_PATH = path.join(ROOT, "src", "manifest-chrome.json");
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-function readJson(filePath: string) {
-	return JSON.parse(readFileSync(filePath, "utf-8"));
+async function readJson(filePath: string): Promise<Record<string, unknown>> {
+	return Bun.file(filePath).json();
 }
 
-function writeJson(filePath: string, data: any) {
-	writeFileSync(filePath, `${JSON.stringify(data, null, "\t")}\n`);
+async function writeJson(filePath: string, data: unknown): Promise<void> {
+	// Match existing style: tab-indented JSON with a trailing newline
+	await Bun.write(filePath, `${JSON.stringify(data, null, "\t")}\n`);
 }
 
 /**
@@ -55,14 +60,16 @@ function higherVersion(a: string | undefined, b: string | undefined): string {
 	return a; // equal
 }
 
-// ─── Read versions ─────────────────────────────────────────────────────────
+// ─── Main ──────────────────────────────────────────────────────────────────
 
 let exitCode = 0;
 
 try {
-	const pkg = readJson(PACKAGE_PATH);
-	const mFF = readJson(MANIFEST_FF_PATH);
-	const mCR = readJson(MANIFEST_CR_PATH);
+	const [pkg, mFF, mCR] = await Promise.all([
+		readJson(PACKAGE_PATH),
+		readJson(MANIFEST_FF_PATH),
+		readJson(MANIFEST_CR_PATH)
+	]);
 
 	const pkgVer = pkg.version as string;
 	const ffVer = mFF.version as string;
@@ -92,15 +99,15 @@ try {
 	console.log(`\n🔧  Promoting all versions to ${latest}…`);
 
 	pkg.version = latest;
-	writeJson(PACKAGE_PATH, pkg);
+	await writeJson(PACKAGE_PATH, pkg);
 	console.log(`   ✓ package.json → ${latest}`);
 
 	mFF.version = latest;
-	writeJson(MANIFEST_FF_PATH, mFF);
+	await writeJson(MANIFEST_FF_PATH, mFF);
 	console.log(`   ✓ manifest-firefox.json → ${latest}`);
 
 	mCR.version = latest;
-	writeJson(MANIFEST_CR_PATH, mCR);
+	await writeJson(MANIFEST_CR_PATH, mCR);
 	console.log(`   ✓ manifest-chrome.json → ${latest}`);
 
 	console.log(`\n✅  Fixed — all versions now ${latest}`);

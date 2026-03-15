@@ -8,9 +8,15 @@
  *   bun run scripts/check-locales.ts
  *
  * Run automatically in CI alongside check-version.ts.
+ *
+ * File I/O strategy:
+ *   - Bun.file(path).json() for JSON reads — Bun-native, zero extra parsing
+ *   - readdir from node:fs/promises — no Bun-native readdir yet; Bun's
+ *     implementation is already 22× faster than Node's (Bun 1.1+ blog)
+ *   - node:path for path operations — no Bun alternative
  */
 
-import { readdir, readFile } from "node:fs/promises";
+import { readdir } from "node:fs/promises";
 import path from "node:path";
 
 const ROOT = path.resolve(import.meta.dir, "..");
@@ -19,7 +25,8 @@ const REFERENCE_LOCALE = "en";
 
 async function readMessages(localeDir: string): Promise<Record<string, unknown>> {
 	const p = path.join(localeDir, "messages.json");
-	return JSON.parse(await readFile(p, "utf-8"));
+	// Bun.file().json() is the native Bun API — faster than readFile + JSON.parse
+	return Bun.file(p).json();
 }
 
 async function main() {
@@ -78,7 +85,7 @@ async function main() {
 	console.log();
 
 	if (hasErrors) {
-		console.error("[check-locales] ✗ Locale check failed — run merge-locale-additions.ts to sync");
+		console.error("[check-locales] ✗ Locale check failed — fix missing keys and re-run");
 		process.exit(1);
 	} else {
 		console.log("[check-locales] ✓ All locales in sync");

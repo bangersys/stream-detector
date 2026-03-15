@@ -54,7 +54,13 @@
 	--pd-cookie-ok-bd: #c3e6cb;
 	--pd-cookie-ok-fg: #155724;
 
-	/* Stream type tag (default: unstyled — themed via [data-theme]) */
+	/*
+	 * Stream type tag tokens — used by popup.css on td[data-stream-type].
+	 * Override in a theme file to give stream type cells consistent theming
+	 * without needing to repeat td[data-stream-type] selectors per theme.
+	 * Individual color overrides per type (HLS=green, DASH=amber, etc.) are
+	 * still done with td[data-stream-type="HLS"] selectors in each theme file.
+	 */
 	--pd-tag-bg: transparent;
 	--pd-tag-bd: transparent;
 	--pd-tag-radius: 2px;

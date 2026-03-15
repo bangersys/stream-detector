@@ -139,15 +139,12 @@ td {
 .th-center {
 	text-align: center;
 }
-
 .th-left {
 	text-align: left;
 }
-
 td.td-center {
 	text-align: center;
 }
-
 td.td-left {
 	text-align: left;
 }
@@ -189,6 +186,22 @@ thead {
 .urlEntry:hover,
 .urlEntry:focus-within {
 	background-color: var(--pd-bg-hover);
+}
+
+/*
+ * ── Stream type cell token bridge ──────────────────────────────────────
+ * Wires the --pd-tag-* tokens (defined in tokens.css) to the actual type
+ * cell. Default values are all transparent/normal so this adds no visual
+ * change out of the box. Themes can override --pd-tag-* to consistently
+ * style the tag cell without repeating td[data-stream-type] selectors.
+ * Individual per-type colours (HLS green, DASH amber, etc.) are set via
+ * td[data-stream-type="HLS"] in each theme file and take precedence.
+ */
+td[data-stream-type] {
+	background: var(--pd-tag-bg);
+	border-color: var(--pd-tag-bd);
+	border-radius: var(--pd-tag-radius);
+	font-weight: var(--pd-tag-font-weight);
 }
 
 /* ── Action bar ───────────────────────────────────────────────────────── */
@@ -249,7 +262,6 @@ thead {
 .relay-connected {
 	color: var(--pd-relay-on);
 }
-
 .relay-disconnected {
 	color: var(--pd-relay-off);
 }

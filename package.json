@@ -37,6 +37,7 @@
     "fix:unsafe": "biome check --write --unsafe src/",
     "ci": "biome ci src/",
     "check-version": "bun run scripts/check-version.ts",
-    "sync-version": "bun run scripts/check-version.ts --fix"
+    "sync-version": "bun run scripts/check-version.ts --fix",
+    "check-locales": "bun run scripts/check-locales.ts"
   }
 }

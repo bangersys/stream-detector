@@ -7,11 +7,18 @@
  *   bun run scripts/build.ts --chrome
  *   bun run scripts/build.ts --all
  *   bun run scripts/build.ts --firefox --watch
+ *
+ * File I/O strategy:
+ *   - Bun.file(path).text() for reading the manifest — Bun-native
+ *   - Bun.write(path, content) for writing the manifest — Bun-native
+ *   - node:fs/promises for rm, mkdir, cp — no Bun-native equivalents yet
+ *   - node:fs for watch — no Bun-native equivalent
+ *   - node:path for path operations
  */
 
-import { watch } from "fs";
-import { cp, mkdir, rm, readFile, writeFile } from "fs/promises";
-import path from "path";
+import { watch } from "node:fs";
+import { cp, mkdir, rm } from "node:fs/promises";
+import path from "node:path";
 
 // ─── CLI args ──────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
@@ -30,11 +37,7 @@ const DIST_FF = path.resolve("dist");
 const DIST_CR = path.resolve("dist-chrome");
 
 // JS entry points — each becomes its own output file
-const JS_ENTRIES = [
-	"src/js/background.js",
-	"src/js/popup.js",
-	"src/js/options.js",
-];
+const JS_ENTRIES = ["src/js/background.js", "src/js/popup.js", "src/js/options.js"];
 
 // Static assets to copy verbatim (relative to src/)
 const STATIC_DIRS = ["css", "img", "_locales"];
@@ -43,9 +46,8 @@ const STATIC_FILES = ["popup.html", "sidebar.html", "options.html", "favicon.ico
 // ─── Build one target ──────────────────────────────────────────────────────
 async function buildTarget(target: "firefox" | "chrome") {
 	const outDir = target === "firefox" ? DIST_FF : DIST_CR;
-	const manifestSrc = target === "firefox"
-		? "src/manifest-firefox.json"
-		: "src/manifest-chrome.json";
+	const manifestSrc =
+		target === "firefox" ? "src/manifest-firefox.json" : "src/manifest-chrome.json";
 
 	console.log(`\n[primedl] Building ${target} → ${outDir}`);
 
@@ -63,10 +65,9 @@ async function buildTarget(target: "firefox" | "chrome") {
 		splitting: false,
 		minify: !watchMode,
 		sourcemap: watchMode ? "inline" : "none",
-		// Allow chrome/browser globals — don't try to polyfill them
 		define: {
-			"process.env.NODE_ENV": JSON.stringify(watchMode ? "development" : "production"),
-		},
+			"process.env.NODE_ENV": JSON.stringify(watchMode ? "development" : "production")
+		}
 	});
 
 	if (!result.success) {
@@ -84,7 +85,7 @@ async function buildTarget(target: "firefox" | "chrome") {
 		format: "esm",
 		splitting: false,
 		minify: !watchMode,
-		sourcemap: watchMode ? "inline" : "none",
+		sourcemap: watchMode ? "inline" : "none"
 	});
 
 	if (!contentResult.success) {
@@ -94,9 +95,9 @@ async function buildTarget(target: "firefox" | "chrome") {
 		throw new Error(`Content script build failed for ${target}`);
 	}
 
-	// Copy manifest — rename to manifest.json
-	const manifest = await readFile(manifestSrc, "utf-8");
-	await writeFile(path.join(outDir, "manifest.json"), manifest);
+	// Copy manifest — read with Bun-native API, write to dest
+	const manifest = await Bun.file(manifestSrc).text();
+	await Bun.write(path.join(outDir, "manifest.json"), manifest);
 
 	// Copy static HTML files
 	for (const file of STATIC_FILES) {
@@ -138,11 +139,10 @@ async function main() {
 		const target = buildFirefox ? "firefox" : "chrome";
 		console.log(`\n[primedl] Watching src/ for changes (${target})…`);
 
-		let debounceTimer: any = null;
+		let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-		watch(SRC, { recursive: true }, (_event: any, filename: any) => {
+		watch(SRC, { recursive: true }, (_event: string, filename: string | null) => {
 			if (!filename) return;
-			// Debounce rapid file saves
 			if (debounceTimer) clearTimeout(debounceTimer);
 			debounceTimer = setTimeout(async () => {
 				console.log(`[primedl] Changed: ${filename} — rebuilding…`);

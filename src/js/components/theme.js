@@ -18,7 +18,7 @@
  *      instantly updates all open popups/sidebars without reload.
  *
  * Adding a new theme:
- *   - Create src/css/themes/<name>.css with [data-theme="<name>"] overrides
+ *   - Create src/css/themes/<n>.css with [data-theme="<n>"] overrides
  *   - Add <link> for the CSS file in popup.html, sidebar.html
  *   - Add uiTheme option value + i18n key in options.html / messages.json
  *   - If the theme needs injected DOM, add a case in initThemeDOM() below
@@ -130,7 +130,7 @@ function injectCompactHeader() {
 	header.innerHTML = `
 		<span id="pd-compact-site">—</span>
 		<span id="pd-compact-counts">
-			<span class="pd-compact-pill" id="pd-compact-streams">0</span>
+			<span class="pd-compact-pill" id="pd-compact-streams">0 streams</span>
 			<span class="pd-compact-pill" id="pd-compact-cookies">0 🍪</span>
 		</span>
 	`;
@@ -154,15 +154,21 @@ function injectCompactHeader() {
 	const tbody = document.getElementById("popupUrlList");
 	if (tbody) {
 		const countObs = new MutationObserver(() => {
-			const rows = tbody.querySelectorAll("tr.urlEntry").length;
-			compactStreamCount = rows;
+			compactStreamCount = tbody.querySelectorAll("tr.urlEntry").length;
 			updateCompactCounts();
 		});
 		countObs.observe(tbody, { childList: true, subtree: false });
 	}
+
+	// ── FIX P0: listen for cookie count updates dispatched by popup.js ────
+	// popup.js calls updateCookieCount() which dispatches pd:cookiecount.
+	// We catch it here to keep the compact header pill in sync.
+	document.addEventListener("pd:cookiecount", (e) => {
+		compactCookieCount = e.detail ?? 0;
+		updateCompactCounts();
+	});
 }
 
-/** Called by the cookie section when count updates — also called from here. */
 function updateCompactCounts() {
 	const streamsEl = document.getElementById("pd-compact-streams");
 	const cookiesEl = document.getElementById("pd-compact-cookies");
@@ -170,72 +176,76 @@ function updateCompactCounts() {
 	if (cookiesEl) cookiesEl.textContent = `${compactCookieCount} 🍪`;
 }
 
+// ─── Dashboard theme: always-open cookie panel ───────────────────────────
+
 /**
- * Update the compact header cookie count from outside (called by popup.js
- * cookie logic via a simple DOM event — no tight coupling).
+ * FIX P2 + P3: Use event-based init instead of a fragile 50ms setTimeout.
+ *
+ * popup.js dispatches "pd:popup-ready" (with window.__pdPopupReady = true)
+ * at the very end of its DOMContentLoaded handler, after all event listeners
+ * are wired. We listen for that event before clicking the toggle, which
+ * ensures popup.js's toggleCookiePanel() runs and sets cookiePanelOpen = true
+ * correctly — fixing the state desync identified in the QA report.
+ *
+ * The window.__pdPopupReady guard handles the edge case where chrome.storage
+ * is slow and popup.js dispatches pd:popup-ready before initThemeDOM() runs.
  */
-function syncCompactCookieCount(count) {
-	compactCookieCount = count;
-	updateCompactCounts();
-}
-
-// ─── Dashboard theme: always-open cookie panel + flag badges ─────────────
-
 function initDashboard() {
-	// Force the cookie panel open immediately
-	const panel = document.getElementById("cookiePanel");
-	const icon = document.getElementById("cookieToggleIcon");
-	const btn = document.getElementById("cookieToggle");
+	const open = () => {
+		const panel = document.getElementById("cookiePanel");
+		const btn = document.getElementById("cookieToggle");
+		// Let popup.js own the state — trigger via click so cookiePanelOpen
+		// is set correctly inside toggleCookiePanel()
+		if (panel?.hidden) {
+			btn?.click();
+		}
+		setupCookiePanelObserver();
+	};
 
-	if (panel) panel.hidden = false;
-	if (icon) icon.textContent = "▼";
-	if (btn) btn.setAttribute("aria-expanded", "true");
-
-	// Fire the existing cookie toggle logic once to load cookie data
-	// (re-dispatch a click on the toggle which triggers loadCookieSection)
-	// We do this with a tiny delay so popup.js finishes its own init first
-	setTimeout(() => {
-		// If the panel was already opened by popup.js, this is a no-op
-		// If not, trigger it so cookie data loads
-		if (!panel?.hidden) return;
-		btn?.click();
-	}, 50);
-
-	// Set up MutationObserver to stamp flag badges on cookie table rows
-	// The cookie panel content is populated by popup.js after the panel opens
-	const cookiePanel = document.getElementById("cookiePanel");
-	if (cookiePanel) {
-		const flagObs = new MutationObserver(() => {
-			stampCookieFlagBadges();
-		});
-		flagObs.observe(cookiePanel, { childList: true, subtree: true });
+	// Guard: if popup.js already finished init before we got here, open now
+	if (window.__pdPopupReady) {
+		open();
+	} else {
+		document.addEventListener("pd:popup-ready", open, { once: true });
 	}
 }
 
 /**
- * Stamp httpOnly / secure badges on cookie display rows.
- * Looks for elements that contain cookie data rendered by popup.js.
- * Non-destructive: skips rows that already have badges.
+ * Set up a MutationObserver on the cookie panel for future badge stamping.
+ *
+ * NOTE: The cookie panel currently shows format/export controls only — it
+ * does not render a table of individual cookies. stampCookieFlagBadges()
+ * therefore finds zero <tr> elements and is a true no-op in the current UI.
+ * The observer and CSS badge classes (pd-flag-httponly, pd-flag-secure) are
+ * kept as forward scaffolding for when a cookie list view is added to the
+ * dashboard layout. The httpOnly property is available in JSON format output
+ * but cannot be parsed from the Netscape or header formats.
+ */
+function setupCookiePanelObserver() {
+	const cookiePanel = document.getElementById("cookiePanel");
+	if (!cookiePanel) return;
+
+	const flagObs = new MutationObserver(() => {
+		stampCookieFlagBadges();
+	});
+	flagObs.observe(cookiePanel, { childList: true, subtree: true });
+}
+
+/**
+ * Stamp secure badges on cookie table rows (forward scaffolding only).
+ * Currently no-op: the cookie panel renders text/controls, not a <tr> table.
+ * Will become active when a cookie list view is added to the dashboard layout.
  */
 function stampCookieFlagBadges() {
-	// Cookie data is stored in urlList entries — the panel shows formatted text.
-	// We scan for known text patterns in the panel's rendered content.
-	// Since the cookie panel shows raw text (netscape/json/header format),
-	// badge injection applies to the cookie TABLE if one is ever rendered,
-	// or to individual cookie rows. Currently popup.js shows a textarea-like view,
-	// so this is a progressive enhancement — badges appear when cookie rows exist.
 	const rows = document.querySelectorAll("#cookiePanel tr");
 	rows.forEach((row) => {
 		if (row.dataset.flagged) return;
 		row.dataset.flagged = "1";
-		const text = row.textContent;
 		const nameCell = row.querySelector("td:first-child");
 		if (!nameCell) return;
 
-		// Check for httpOnly and secure indicators in the row data
-		// (These would come from the serialized cookie data)
-		const isSecure =
-			text.includes("TRUE") && row.cells.length >= 4 && row.cells[3]?.textContent === "TRUE";
+		// Secure flag: column index 3 in Netscape format is the "secure" boolean
+		const isSecure = row.cells.length >= 4 && row.cells[3]?.textContent?.trim() === "TRUE";
 		if (isSecure) {
 			const badge = document.createElement("span");
 			badge.className = "pd-flag-badge pd-flag-secure";
@@ -258,7 +268,7 @@ function initStorageListener() {
 			localStorage.setItem(LS_CACHE_KEY, newTheme);
 		} catch (_) {}
 
-		// Re-run layout-specific inits if switching to/from a layout theme
+		// Re-run layout-specific inits if switching to a layout theme
 		if (LAYOUT_THEMES.has(newTheme)) {
 			initThemeDOM(newTheme);
 		}
@@ -302,6 +312,6 @@ function initThemeDOM(theme) {
 	initThemeDOM(theme);
 })();
 
-// ─── Exported helpers (for use by options.js if needed) ───────────────────
-
-export { applyTheme, syncCompactCookieCount };
+// applyTheme exported for options.js; syncCompactCookieCount removed —
+// compact cookie count is now driven by the pd:cookiecount DOM event.
+export { applyTheme };

@@ -366,9 +366,9 @@
 
 				<!-- ── UI Theme ───────────────────────────────────────────── -->
 				<!--
-				  uiTheme is a class="option" element so the existing saveOptionStorage
-				  handler in options.js saves it automatically on change.
+				  uiTheme is a class="option" element so saveOptionStorage saves it on change.
 				  theme.js listens via chrome.storage.onChanged and applies live.
+				  uiThemeTip span wires the i18n tooltip key that was previously unreachable.
 				-->
 				<tr>
 					<td><label for="uiTheme"></label></td>
@@ -381,6 +381,9 @@
 							<option value="dashboard" data-i18n-opt="themeDashboard"></option>
 							<option value="brutalist" data-i18n-opt="themeBrutalist"></option>
 						</select>
+						<div class="tipContainer">
+							<span class="tip" id="uiThemeTip">?</span>
+						</div>
 					</td>
 				</tr>
 
