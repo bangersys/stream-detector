@@ -1,26 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="terminal">
 	<head>
 		<meta charset="UTF-8" />
 		<title>primedl</title>
-		<!-- FOUC prevention — see fouc.js and popup.html for rationale -->
 		<script src="fouc.js"></script>
-		<!-- Token layer -->
 		<link rel="stylesheet" href="css/tokens.css" />
-		<!-- Theme overrides -->
 		<link rel="stylesheet" href="css/themes/terminal.css" />
 		<link rel="stylesheet" href="css/themes/clean-card.css" />
 		<link rel="stylesheet" href="css/themes/compact.css" />
 		<link rel="stylesheet" href="css/themes/dashboard.css" />
 		<link rel="stylesheet" href="css/themes/brutalist.css" />
-		<!-- Structural styles -->
 		<link rel="stylesheet" href="css/sidebar.css" />
 		<link rel="icon" href="favicon.ico" />
 	</head>
 	<body id="sidebar">
 		<div id="container">
 
-			<!-- Tab selector -->
 			<div class="tab-row">
 				<label class="tab-label">
 					<input class="option" type="radio" id="tabThis" name="tab" checked />
@@ -36,7 +31,6 @@
 				</label>
 			</div>
 
-			<!-- Filter + copy method -->
 			<div class="toolbar-row">
 				<div class="filter-group">
 					<input class="option" type="text" id="filterInput" />
@@ -59,7 +53,6 @@
 				</div>
 			</div>
 
-			<!-- URL list (compact 2-column: content | delete) -->
 			<div id="urlList">
 				<table>
 					<colgroup>
@@ -76,7 +69,6 @@
 				</table>
 			</div>
 
-			<!-- Bottom action bar -->
 			<div class="action-bar">
 				<label class="action-bar-check">
 					<input class="option" id="disablePref" type="checkbox" />
@@ -87,22 +79,18 @@
 				<button type="button" id="openOptions"><label for="openOptions"></label></button>
 			</div>
 
-			<!-- primedl relay status -->
 			<div id="primedlStatusBar">
 				<span id="primedlStatus" class="relay-disconnected">○ primedl offline</span>
 			</div>
 
-			<!-- ── Cookies section ─────────────────────────────────────────── -->
 			<div id="cookieSection">
 				<button type="button" id="cookieToggle" aria-expanded="false">
 					<span id="cookieToggleIcon" aria-hidden="true">▶</span>
 					<span class="cookie-section-title" data-i18n="cookieSection"></span>
 					<span id="cookieCount" class="cookie-count"></span>
 				</button>
-
 				<div id="cookiePanel" hidden>
 					<div class="cookie-controls">
-
 						<div class="cookie-format-row">
 							<label for="cookieFormat" data-i18n="cookieFormat"></label>
 							<select id="cookieFormat">
@@ -111,23 +99,15 @@
 								<option value="header"></option>
 							</select>
 						</div>
-
 						<div class="cookie-btn-row">
-							<button type="button" id="cookieExport">
-								<label for="cookieExport"></label>
-							</button>
-							<button type="button" id="cookieExportAs">
-								<label for="cookieExportAs"></label>
-							</button>
+							<button type="button" id="cookieExport"><label for="cookieExport"></label></button>
+							<button type="button" id="cookieExportAs"><label for="cookieExportAs"></label></button>
 							<button type="button" id="cookieCopy" class="cookie-copy-btn">
 								<span class="copy-default" data-i18n="cookieCopy"></span>
 								<span class="copy-done" data-i18n="cookieCopied" hidden></span>
 							</button>
-							<button type="button" id="cookieExportAll">
-								<label for="cookieExportAll"></label>
-							</button>
+							<button type="button" id="cookieExportAll"><label for="cookieExportAll"></label></button>
 						</div>
-
 					</div>
 				</div>
 			</div>

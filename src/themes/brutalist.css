@@ -1,55 +1,9 @@
 /**
  * primedl — themes/brutalist.css
  * Theme 05: Mono Brutalist
- *
- * Off-white background, full black 2px borders, zero border-radius,
- * DM Mono monospace throughout. Bold and fast to scan.
- * Adapts to OS dark mode with an inverted palette.
+ * Tokens defined in tokens.css [data-theme="brutalist"].
+ * This file handles border overrides, inverted states, uppercase typography.
  */
-
-[data-theme="brutalist"] {
-	--pd-bg: #f5f0e8;
-	--pd-fg: #000000;
-	--pd-bg-2: #ece8de;
-	--pd-bg-hover: #e0dbd0;
-	--pd-border: #000000;
-	--pd-border-input: #000000;
-	--pd-border-strong: #000000;
-
-	--pd-font: "DM Mono", ui-monospace, "Cascadia Code", "Fira Mono", "Consolas", monospace;
-	--pd-radius: 0px;
-	--pd-radius-md: 0px;
-	--pd-radius-lg: 0px;
-
-	--pd-accent: #000000;
-	--pd-accent-fg: #f5f0e8;
-
-	--pd-relay-on: #006600;
-	--pd-relay-off: #666666;
-
-	--pd-cookie-ok-bg: #ccffcc;
-	--pd-cookie-ok-bd: #006600;
-	--pd-cookie-ok-fg: #003300;
-}
-
-@media (prefers-color-scheme: dark) {
-	[data-theme="brutalist"] {
-		--pd-bg: #0d0d0a;
-		--pd-fg: #f0ede5;
-		--pd-bg-2: #181815;
-		--pd-bg-hover: #252520;
-		--pd-border: #f0ede5;
-		--pd-border-input: #f0ede5;
-		--pd-border-strong: #f0ede5;
-		--pd-accent: #f0ede5;
-		--pd-accent-fg: #0d0d0a;
-		--pd-relay-on: #00cc00;
-		--pd-relay-off: #888888;
-		--pd-cookie-ok-bg: #003300;
-		--pd-cookie-ok-bd: #00cc00;
-		--pd-cookie-ok-fg: #00cc00;
-	}
-}
 
 /* ─── Heavy borders everywhere ───────────────────────────────────────────── */
 [data-theme="brutalist"] .tab-row,
@@ -58,13 +12,11 @@
 [data-theme="brutalist"] .urlEntry,
 [data-theme="brutalist"] .action-bar,
 [data-theme="brutalist"] #primedlStatusBar,
-[data-theme="brutalist"] #cookieSection,
-[data-theme="brutalist"] #cookieToggle {
+[data-theme="brutalist"] #cookieSection {
 	border-width: 2px !important;
 	border-style: solid !important;
 	border-color: var(--pd-border) !important;
 }
-
 [data-theme="brutalist"] .filter-group input[type="text"],
 [data-theme="brutalist"] .method-group select,
 [data-theme="brutalist"] .cookie-format-row select {
@@ -82,7 +34,7 @@
 	background: var(--pd-bg-hover) !important;
 }
 
-/* ─── Table header: uppercase bold ───────────────────────────────────────── */
+/* ─── Table header ───────────────────────────────────────────────────────── */
 [data-theme="brutalist"] thead {
 	font-size: 0.78em;
 	letter-spacing: 0.08em;
@@ -91,7 +43,7 @@
 	opacity: 1;
 }
 
-/* ─── Inverted hover on action buttons ───────────────────────────────────── */
+/* ─── Inverted action buttons ────────────────────────────────────────────── */
 [data-theme="brutalist"] .action-bar button,
 [data-theme="brutalist"] .cookie-btn-row button {
 	border: 2px solid var(--pd-border) !important;
@@ -109,26 +61,19 @@
 	color: var(--pd-bg) !important;
 }
 
-/* ─── Brutalist stream type labels ───────────────────────────────────────── */
+/* ─── Stream type labels ─────────────────────────────────────────────────── */
 [data-theme="brutalist"] td[data-stream-type] {
 	font-weight: 700;
 	font-size: 0.82em;
 	letter-spacing: 0.05em;
 }
 
-/* ─── Relay status: uppercase mono ───────────────────────────────────────── */
-[data-theme="brutalist"] #primedlStatusBar {
+/* ─── Cookie + status typography ─────────────────────────────────────────── */
+[data-theme="brutalist"] #primedlStatusBar,
+[data-theme="brutalist"] #cookieToggle {
 	font-family: var(--pd-font);
 	font-size: 0.7em;
 	letter-spacing: 0.06em;
-	text-transform: uppercase;
-}
-
-/* ─── Cookie toggle ──────────────────────────────────────────────────────── */
-[data-theme="brutalist"] #cookieToggle {
-	font-family: var(--pd-font);
-	font-size: 0.75em;
-	letter-spacing: 0.05em;
 	text-transform: uppercase;
 	font-weight: 700;
 }

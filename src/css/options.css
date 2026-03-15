@@ -1,8 +1,6 @@
 /**
  * primedl — options.css
- *
- * Styles for the options page. All colors via --pd-* tokens from tokens.css.
- * Includes the same token load order as popup.html.
+ * All colours via --pd-* tokens. Works with all themes.
  */
 
 html,
@@ -32,7 +30,7 @@ body {
 	white-space: nowrap;
 	text-align: right;
 	font-size: 0.88em;
-	opacity: 0.8;
+	opacity: 0.75;
 	width: 40%;
 }
 
@@ -40,7 +38,7 @@ body {
 #options input[type="number"],
 #options textarea,
 #options select {
-	background: var(--pd-bg);
+	background: var(--pd-bg-2);
 	color: var(--pd-fg);
 	border: 1px solid var(--pd-border-input);
 	border-radius: var(--pd-radius);
@@ -95,13 +93,13 @@ body {
 
 .warning {
 	display: none;
-	color: #cc0000;
+	color: #f06060;
 	font-weight: 700;
 }
 
 #versionContainer {
 	text-align: center;
 	padding-top: 12px;
-	opacity: 0.55;
+	opacity: 0.45;
 	font-size: 0.82em;
 }

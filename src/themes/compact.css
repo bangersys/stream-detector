@@ -1,57 +1,9 @@
 /**
  * primedl — themes/compact.css
  * Theme 03: Compact Status Strip
- *
- * Injected teal header bar shows current site + live stream/cookie counts.
- * Everything is tighter — max info in minimum vertical space.
- * Header element (#pd-compact-header) is injected by theme.js.
+ * Tokens defined in tokens.css [data-theme="compact"].
+ * This file handles the injected header element and density overrides.
  */
-
-[data-theme="compact"] {
-	--pd-bg: #ffffff;
-	--pd-fg: #1a1a1a;
-	--pd-bg-2: #f4f4f4;
-	--pd-bg-hover: #ebebeb;
-	--pd-border: #d8d8d8;
-	--pd-border-input: #cccccc;
-	--pd-border-strong: #bbbbbb;
-
-	--pd-radius: 3px;
-	--pd-radius-md: 4px;
-	--pd-radius-lg: 5px;
-
-	--pd-accent: #1db954;
-	--pd-accent-fg: #ffffff;
-
-	--pd-relay-on: #1db954;
-	--pd-relay-off: #999999;
-
-	--pd-cookie-ok-bg: #d4f0e2;
-	--pd-cookie-ok-bd: #1db954;
-	--pd-cookie-ok-fg: #0a5230;
-
-	--pd-header-bg: #1db954;
-	--pd-header-fg: #ffffff;
-	--pd-header-pill-bg: rgba(0, 0, 0, 0.18);
-}
-
-@media (prefers-color-scheme: dark) {
-	[data-theme="compact"] {
-		--pd-bg: #181818;
-		--pd-fg: #e0e0e0;
-		--pd-bg-2: #222222;
-		--pd-bg-hover: #2c2c2c;
-		--pd-border: #383838;
-		--pd-border-input: #444444;
-		--pd-border-strong: #505050;
-		--pd-relay-on: #1db954;
-		--pd-relay-off: #555555;
-		--pd-cookie-ok-bg: #0a2015;
-		--pd-cookie-ok-bd: #1db954;
-		--pd-cookie-ok-fg: #1db954;
-		--pd-header-pill-bg: rgba(255, 255, 255, 0.15);
-	}
-}
 
 /* ─── Injected compact header (created by theme.js) ─────────────────────── */
 #pd-compact-header {
@@ -67,7 +19,6 @@
 	gap: 8px;
 	min-height: 28px;
 }
-
 #pd-compact-site {
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -76,13 +27,11 @@
 	flex: 1;
 	min-width: 0;
 }
-
 #pd-compact-counts {
 	display: flex;
 	gap: 5px;
 	flex-shrink: 0;
 }
-
 .pd-compact-pill {
 	background: var(--pd-header-pill-bg);
 	padding: 1px 8px;
@@ -92,7 +41,7 @@
 	white-space: nowrap;
 }
 
-/* ─── Compact: tab row ───────────────────────────────────────────────────── */
+/* ─── Density overrides ──────────────────────────────────────────────────── */
 [data-theme="compact"] .tab-row {
 	font-size: 0.76em;
 }
@@ -103,13 +52,9 @@
 	color: var(--pd-accent);
 	border-bottom: 2px solid var(--pd-accent);
 }
-
-/* ─── Compact: toolbar ───────────────────────────────────────────────────── */
 [data-theme="compact"] .toolbar-row {
 	padding: 3px 5px;
 }
-
-/* ─── Compact: table cells ───────────────────────────────────────────────── */
 [data-theme="compact"] th,
 [data-theme="compact"] td {
 	padding: 0.35em 0.5em;
@@ -117,8 +62,6 @@
 [data-theme="compact"] thead {
 	font-size: 0.75em;
 }
-
-/* ─── Compact: action bar ────────────────────────────────────────────────── */
 [data-theme="compact"] .action-bar {
 	padding: 3px 5px;
 }
@@ -127,18 +70,37 @@
 	padding: 2px 7px;
 	font-size: 0.75em;
 }
-
-/* ─── Compact: status bar ────────────────────────────────────────────────── */
 [data-theme="compact"] #primedlStatusBar {
 	padding: 2px 6px;
 	font-size: 0.68em;
 }
-
-/* ─── Compact: cookie toggle ─────────────────────────────────────────────── */
 [data-theme="compact"] #cookieToggle {
 	padding: 4px 8px;
 	font-size: 0.76em;
 }
 [data-theme="compact"] #cookiePanel {
 	padding: 5px 8px 8px;
+}
+
+/* ─── Stream type coloring ───────────────────────────────────────────────── */
+[data-theme="compact"] td[data-stream-type="HLS"] {
+	color: #1dbe72;
+	font-weight: 600;
+}
+[data-theme="compact"] td[data-stream-type="DASH"] {
+	color: #e87d1a;
+	font-weight: 600;
+}
+[data-theme="compact"] td[data-stream-type="HDS"] {
+	color: #e83a3a;
+	font-weight: 600;
+}
+[data-theme="compact"] td[data-stream-type="MSS"] {
+	color: #9b6ce8;
+	font-weight: 600;
+}
+[data-theme="compact"] td[data-stream-type="MP4"],
+[data-theme="compact"] td[data-stream-type="MKV"] {
+	color: var(--pd-accent);
+	font-weight: 600;
 }

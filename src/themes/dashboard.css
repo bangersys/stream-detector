@@ -1,62 +1,16 @@
 /**
  * primedl — themes/dashboard.css
  * Theme 04: Side-by-Side Dashboard
- *
- * Wider popup (460px). Streams and cookies in two columns simultaneously.
- * Cookie panel is always-open in this theme (forced by theme.js).
- * Flag badges (httpOnly, secure) on cookies are injected by theme.js.
+ * Tokens defined in tokens.css [data-theme="dashboard"].
+ * This file handles the two-column grid layout and flag badge styles.
  */
 
-[data-theme="dashboard"] {
-	--pd-bg: #f8f9fb;
-	--pd-fg: #1e2030;
-	--pd-bg-2: #ffffff;
-	--pd-bg-hover: #eef0f5;
-	--pd-border: #dde0ea;
-	--pd-border-input: #cccfe0;
-	--pd-border-strong: #babdd0;
-
-	--pd-radius: 5px;
-	--pd-radius-md: 8px;
-	--pd-radius-lg: 12px;
-
-	--pd-accent: #3b5cf5;
-	--pd-accent-fg: #ffffff;
-
-	--pd-relay-on: #22aa55;
-	--pd-relay-off: #aaaaaa;
-
-	--pd-cookie-ok-bg: #d4ece2;
-	--pd-cookie-ok-bd: #22aa55;
-	--pd-cookie-ok-fg: #0a4025;
-
-	--pd-header-bg: #3b5cf5;
-	--pd-header-fg: #ffffff;
-}
-
-@media (prefers-color-scheme: dark) {
-	[data-theme="dashboard"] {
-		--pd-bg: #1a1c28;
-		--pd-fg: #e0e2f0;
-		--pd-bg-2: #22253a;
-		--pd-bg-hover: #2a2d48;
-		--pd-border: #33375a;
-		--pd-border-input: #424570;
-		--pd-border-strong: #505580;
-		--pd-relay-on: #22aa55;
-		--pd-relay-off: #555570;
-		--pd-cookie-ok-bg: #0a2018;
-		--pd-cookie-ok-bd: #22aa55;
-		--pd-cookie-ok-fg: #22aa55;
-	}
-}
-
-/* ─── Wider popup body ───────────────────────────────────────────────────── */
+/* ─── Wider popup ────────────────────────────────────────────────────────── */
 [data-theme="dashboard"] body {
 	min-width: 460px !important;
 }
 
-/* ─── Two-column grid layout ─────────────────────────────────────────────── */
+/* ─── Two-column grid ────────────────────────────────────────────────────── */
 [data-theme="dashboard"] #container {
 	display: grid;
 	grid-template-areas:
@@ -68,7 +22,6 @@
 	grid-template-columns: 55% 45%;
 	grid-template-rows: auto auto 1fr auto auto;
 }
-
 [data-theme="dashboard"] .tab-row {
 	grid-area: tabs;
 }
@@ -89,7 +42,7 @@
 	grid-area: status;
 }
 
-/* ─── Cookie column always-visible ──────────────────────────────────────── */
+/* ─── Cookie column always visible ──────────────────────────────────────── */
 [data-theme="dashboard"] #cookieSection {
 	border-top: none !important;
 	border-left: 1px solid var(--pd-border) !important;
@@ -98,8 +51,6 @@
 	overflow: hidden;
 	min-height: 0;
 }
-
-/* Hide the toggle button — panel is always open in dashboard */
 [data-theme="dashboard"] #cookieToggle {
 	cursor: default;
 	background: var(--pd-bg-2) !important;
@@ -110,20 +61,15 @@
 	text-transform: uppercase;
 	pointer-events: none;
 }
-
 [data-theme="dashboard"] #cookieToggleIcon {
 	display: none;
 }
-
-/* Cookie panel fills the column height */
 [data-theme="dashboard"] #cookiePanel {
 	flex: 1;
 	overflow-y: auto;
 	min-height: 0;
 	padding: 6px 8px;
 }
-
-/* ─── Dashboard: compact cookie controls ─────────────────────────────────── */
 [data-theme="dashboard"] .cookie-btn-row {
 	grid-template-columns: 1fr 1fr;
 }
@@ -132,7 +78,36 @@
 	padding: 3px 4px;
 }
 
-/* ─── httpOnly / Secure badge (injected spans by theme.js) ──────────────── */
+/* ─── Active tab ─────────────────────────────────────────────────────────── */
+[data-theme="dashboard"] .tab-label.pd-tab-active {
+	border-bottom: 2px solid var(--pd-accent);
+	color: var(--pd-accent);
+}
+
+/* ─── Stream type coloring ───────────────────────────────────────────────── */
+[data-theme="dashboard"] td[data-stream-type="HLS"] {
+	color: #1dbe72;
+	font-weight: 600;
+}
+[data-theme="dashboard"] td[data-stream-type="DASH"] {
+	color: #e87d1a;
+	font-weight: 600;
+}
+[data-theme="dashboard"] td[data-stream-type="HDS"] {
+	color: #e83a3a;
+	font-weight: 600;
+}
+[data-theme="dashboard"] td[data-stream-type="MSS"] {
+	color: #9b6ce8;
+	font-weight: 600;
+}
+[data-theme="dashboard"] td[data-stream-type="MP4"],
+[data-theme="dashboard"] td[data-stream-type="MKV"] {
+	color: var(--pd-accent);
+	font-weight: 600;
+}
+
+/* ─── Flag badges ────────────────────────────────────────────────────────── */
 .pd-flag-badge {
 	display: inline-block;
 	font-size: 0.65em;
@@ -154,7 +129,6 @@
 	color: #155724;
 	border: 1px solid #c3e6cb;
 }
-
 @media (prefers-color-scheme: dark) {
 	.pd-flag-httponly {
 		background: #3a2e00;
@@ -166,33 +140,4 @@
 		color: #6fcf97;
 		border-color: #1a5030;
 	}
-}
-
-/* ─── Dashboard: active tab underline ───────────────────────────────────── */
-[data-theme="dashboard"] .tab-label.pd-tab-active {
-	border-bottom: 2px solid var(--pd-accent);
-	color: var(--pd-accent);
-}
-
-/* ─── Dashboard: stream type coloring ───────────────────────────────────── */
-[data-theme="dashboard"] td[data-stream-type="HLS"] {
-	color: #1dbe72;
-	font-weight: 600;
-}
-[data-theme="dashboard"] td[data-stream-type="DASH"] {
-	color: #e87d1a;
-	font-weight: 600;
-}
-[data-theme="dashboard"] td[data-stream-type="HDS"] {
-	color: #e83a3a;
-	font-weight: 600;
-}
-[data-theme="dashboard"] td[data-stream-type="MSS"] {
-	color: #9b6ce8;
-	font-weight: 600;
-}
-[data-theme="dashboard"] td[data-stream-type="MP4"],
-[data-theme="dashboard"] td[data-stream-type="MKV"] {
-	color: var(--pd-accent);
-	font-weight: 600;
 }

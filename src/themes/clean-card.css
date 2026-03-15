@@ -1,51 +1,9 @@
 /**
  * primedl — themes/clean-card.css
  * Theme 02: Clean Card / Tabbed
- *
- * Modern card-style stream entries, pill-style tab navigation.
- * Adapts to OS dark mode preference like the default theme.
+ * Tokens defined in tokens.css [data-theme="clean-card"].
+ * This file handles visual overrides: pill tabs, card entries, rounded buttons.
  */
-
-[data-theme="clean-card"] {
-	--pd-bg: #f7f7fc;
-	--pd-fg: #1a1a2e;
-	--pd-bg-2: #ffffff;
-	--pd-bg-hover: #ededf8;
-	--pd-border: #dddde8;
-	--pd-border-input: #cbcbda;
-	--pd-border-strong: #b8b8cc;
-
-	--pd-radius: 8px;
-	--pd-radius-md: 12px;
-	--pd-radius-lg: 16px;
-
-	--pd-accent: #5562e8;
-	--pd-accent-fg: #ffffff;
-
-	--pd-relay-on: #22c57a;
-	--pd-relay-off: #aaaaaa;
-
-	--pd-cookie-ok-bg: #d4f0e2;
-	--pd-cookie-ok-bd: #22c57a;
-	--pd-cookie-ok-fg: #0a5230;
-}
-
-@media (prefers-color-scheme: dark) {
-	[data-theme="clean-card"] {
-		--pd-bg: #1a1a2e;
-		--pd-fg: #e4e4f4;
-		--pd-bg-2: #22223a;
-		--pd-bg-hover: #2a2a48;
-		--pd-border: #34345a;
-		--pd-border-input: #42426a;
-		--pd-border-strong: #505080;
-		--pd-relay-on: #22c57a;
-		--pd-relay-off: #555570;
-		--pd-cookie-ok-bg: #0a2a1c;
-		--pd-cookie-ok-bd: #22c57a;
-		--pd-cookie-ok-fg: #22c57a;
-	}
-}
 
 /* ─── Pill tabs ──────────────────────────────────────────────────────────── */
 [data-theme="clean-card"] .tab-row {
@@ -84,7 +42,7 @@
 }
 [data-theme="clean-card"] .urlEntry {
 	background: var(--pd-bg-2);
-	border: 1px solid var(--pd-border);
+	border: 1px solid var(--pd-border) !important;
 	border-bottom: 1px solid var(--pd-border) !important;
 	border-radius: var(--pd-radius) !important;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
@@ -93,12 +51,6 @@
 [data-theme="clean-card"] .urlEntry:focus-within {
 	border-color: var(--pd-accent) !important;
 	background: var(--pd-bg-hover);
-}
-[data-theme="clean-card"] .urlEntry td:first-child {
-	border-radius: var(--pd-radius) 0 0 var(--pd-radius);
-}
-[data-theme="clean-card"] .urlEntry td:last-child {
-	border-radius: 0 var(--pd-radius) var(--pd-radius) 0;
 }
 
 /* ─── Stream type badges ─────────────────────────────────────────────────── */
@@ -147,14 +99,11 @@
 	color: var(--pd-accent-fg) !important;
 }
 
-/* ─── Cookie section as inset card ──────────────────────────────────────── */
+/* ─── Active tab underline ───────────────────────────────────────────────── */
 [data-theme="clean-card"] #cookieSection {
 	margin: 0 6px 6px;
 	border: 1px solid var(--pd-border) !important;
 	border-radius: var(--pd-radius);
-}
-[data-theme="clean-card"] #cookieToggle {
-	border-radius: var(--pd-radius) var(--pd-radius) 0 0;
 }
 [data-theme="clean-card"] #cookieToggle:hover {
 	background: var(--pd-bg-hover) !important;
