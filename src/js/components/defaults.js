@@ -62,9 +62,12 @@ const defaults = {
 	primedlRelayEnabled: true,
 	primedlRelayPort: 7421,
 
+	// Cookie export
+	cookieExportFormat: "netscape",
+
 	// Internal — managed by background.js
 	urlStorageRestore: [],
-	urlStorage: []
+	urlStorage: [],
 };
 
 export default defaults;

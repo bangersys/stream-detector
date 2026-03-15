@@ -3,13 +3,13 @@
 		"message": "Automatisches Herunterladen von Nicht-Manifest-Dateien"
 	},
 	"autoDownloadTip": {
-		"message": "Speichert Dateien in einem Standardordner. Nützlich, um z.B. einen Stream beim Ansehen zu speichern. Funktioniert nur, wenn 'Ignoriere Links auf Mediendateien' inaktiv ist. Zeigt keine Meldungen, um den Nutzer nicht zu nerven.Nutze URL Blacklists, um automatische Downloads zu verhindern."
+		"message": "Speichert Dateien in einem Standardordner. Nützlich, um z.B. einen Stream beim Ansehen zu speichern. Funktioniert nur, wenn 'Ignoriere Links auf Mediendateien' inaktiv ist. Zeigt keine Meldungen, um den Nutzer nicht zu nerven. Nutze URL-Blacklists, um automatische Downloads zu verhindern."
 	},
 	"blacklistPref": {
 		"message": "Nutze Blacklists für Inhalte"
 	},
 	"blacklistTip": {
-		"message": "Ein Eintrag pro Zeile, Groß-/Kleinschreibung wird ignoriert, betrifft Stream- und Mediendateien, Content-Type Header, und URLs. Das AddOn wird alle URLs ignorieren, die diese Phrasen enthalten.."
+		"message": "Ein Eintrag pro Zeile, Groß-/Kleinschreibung wird ignoriert, betrifft Stream- und Mediendateien, Content-Type Header, und URLs. Das AddOn wird alle URLs ignorieren, die diese Phrasen enthalten."
 	},
 	"buttonClick": {
 		"message": "Funktion des Browser Action Buttons"
@@ -57,7 +57,7 @@
 		"message": "Export/Import der Einstellungen (JSON Datei)"
 	},
 	"extText": {
-		"message": "Erkennen von Playlists und Untertiteln in HLS, DASH, HDS und MSS Streams. Generiert yt-dlp, FFmpeg, Streamlink, hlsdl und weitere (benutzerdefinierte) Kommandos."
+		"message": "Erkennt HLS/DASH/HDS/MSS-Streams und leitet sie an primedl weiter. Generiert yt-dlp, FFmpeg, Streamlink und weitere Kommandos."
 	},
 	"ffmpeg": {
 		"message": "FFmpeg Kommando"
@@ -99,40 +99,40 @@
 		"message": "Ignoriere Streams"
 	},
 	"manifestTip": {
-		"message": "Eigentlich der Haupt-Anwendungszweck dieses AddONs. Deaktivieren ist sinnvoll, wenn man z.B. ausschließlich Deteien mit einem spezifischen Header oder Extension erfassen möchte."
+		"message": "Eigentlich der Haupt-Anwendungszweck dieses AddONs. Deaktivieren ist sinnvoll, wenn man z.B. ausschließlich Dateien mit einem spezifischen Header oder Extension erfassen möchte."
 	},
 	"multithreadPref": {
-		"message": "Paralleles Downloaden der fragmente mittels yt-dlp"
+		"message": "Mehrere gleichzeitige Fragmente in yt-dlp herunterladen"
 	},
 	"nm3u8dl": {
 		"message": "N_m3u8DL-RE Kommando"
 	},
 	"noRestorePref": {
-		"message": "Deaktiviere Wiederaufnahme der vorherigen Session (leere Einträge beim Start)"
+		"message": "Vorherige Sitzungsfunktion deaktivieren (Einträge beim Start löschen)"
 	},
 	"notifCopiedText": {
-		"message": "Erfolgreich kopierte URL(s):\n"
+		"message": "Folgende URL(s) erfolgreich kopiert:\n"
 	},
 	"notifCopiedTitle": {
 		"message": "URL(s) kopiert!"
 	},
 	"notifDetectPref": {
-		"message": "Deaktiviere Meldung beim Erkennen"
+		"message": "Erkennungsbenachrichtigungen deaktivieren"
 	},
 	"notifDownErrorText": {
-		"message": "Diese URL verursachte den Fehler:\n"
+		"message": "URL kann nicht heruntergeladen werden:\n"
 	},
 	"notifDownErrorTitle": {
-		"message": "Downloadfehler!"
+		"message": "Download-Fehler!"
 	},
 	"notifErrorText": {
-		"message": "Kann URL(s) nicht kopieren:\n"
+		"message": "URL(s) konnten nicht kopiert werden:\n"
 	},
 	"notifErrorTitle": {
 		"message": "Kopierfehler!"
 	},
 	"notifIncompCopiedText": {
-		"message": "Stream URL(s) wurde im Klartext kopiert, da das ausgewählte Tool nicht kompatibel ist:\n"
+		"message": "Stream-URL(s) wurden im einfachen Format kopiert, da das gewählte Tool nicht kompatibel ist:\n"
 	},
 	"notifManyText": {
 		"message": "Neue Streams erkannt:\n"
@@ -141,28 +141,28 @@
 		"message": "Mehrere Streams erkannt!"
 	},
 	"notifPref": {
-		"message": "Deaktiviere Benachrichtigungen"
+		"message": "Alle Benachrichtigungen deaktivieren"
 	},
 	"notifText": {
-		"message": "$1 Stream:\n"
+		"message": "Neuer $1 Stream erkannt:\n"
 	},
 	"notifTitle": {
-		"message": "Neuer Stream erkannt!"
+		"message": "Stream erkannt!"
 	},
 	"openOptions": {
 		"message": "Einstellungen"
 	},
 	"openPopup": {
-		"message": "Öffne das AddOn Popup"
+		"message": "Addon-Popup öffnen"
 	},
 	"openSidebar": {
-		"message": "Öffne die AddOn Sidebar"
+		"message": "Addon-Seitenleiste öffnen"
 	},
 	"placeholderCell": {
 		"message": "Keine URLs verfügbar."
 	},
 	"player": {
-		"message": "Standard Player"
+		"message": "Standard-Player"
 	},
 	"popupFilename": {
 		"message": "Dateiname"
@@ -180,78 +180,120 @@
 		"message": "Typ"
 	},
 	"proxyPref": {
-		"message": "Nutze HTTP Proxyserver"
+		"message": "HTTP-Proxy-Server verwenden"
 	},
 	"recentPref": {
-		"message": "Zeige nur eine bestimmte Menge der letzten Einträge"
+		"message": "Nur eine bestimmte Anzahl der neuesten Einträge anzeigen"
 	},
 	"regexCommandPref": {
-		"message": "Nutze regex in benutzerdefinierten Kommandos"
+		"message": "Regex im benutzerdefinierten Befehl verwenden"
 	},
 	"regexCommandTip": {
-		"message": "Eingabe als String, z.B. ab+c. Führt Ersetungen im letztendlichen Benutzerkommando durch. Empty replacement field will remove the match."
+		"message": "Als Zeichenkette eingeben, z.B. ab+c. Führt eine Ersetzung im finalen Benutzerbefehl durch. Leeres Ersetzungsfeld entfernt die Übereinstimmung."
 	},
 	"regexWarning": {
-		"message": "Fehlerhafter regulärer Ausdruck."
+		"message": "Falscher regulärer Ausdruck."
 	},
 	"resetButton": {
 		"message": "Einstellungen zurücksetzen"
 	},
 	"resetButtonConfirm": {
-		"message": "Sicher? Alles auf Standard einstellen?"
+		"message": "Sind Sie sicher, dass Sie alle Einstellungen zurücksetzen möchten?"
 	},
 	"resetButtonLabel": {
-		"message": "Alle AddOn Daten zurücksetzen (im Notfall)"
+		"message": "Alle Addon-Daten zurücksetzen (im Notfall)"
 	},
 	"streamlink": {
 		"message": "Streamlink Kommando"
 	},
 	"streamlinkOutput": {
-		"message": "Speichere Streamlink zu"
+		"message": "Streamlink-Ausgabe an"
 	},
 	"subtitlePref": {
-		"message": "Ignoriere Untertitel"
+		"message": "Untertitel ignorieren"
 	},
 	"tabAll": {
 		"message": "Aktuelle Sitzung"
 	},
 	"tabPrevious": {
-		"message": "Vorherige Sitzung"
+		"message": "Vorherige Sitzungen"
 	},
 	"tabThis": {
-		"message": "von aktuellem Tab"
+		"message": "Aktueller Tab"
 	},
 	"tableForm": {
 		"message": "Tabelleneintrag"
 	},
 	"timestampPref": {
-		"message": "Füge Zeitstempel ans Ende der Datei hinzu"
+		"message": "Zeitstempel an Dateiname anhängen"
 	},
 	"tipHint": {
-		"message": "Lass die Maus über einer Option schweben, um mehr über diese zu erfahren."
+		"message": "Bewegen Sie den Mauszeiger über Fragezeichen, um mehr über bestimmte Optionen zu erfahren."
 	},
 	"titlePref": {
-		"message": "Zeige den Tab Titel als Quelle"
+		"message": "Tab-Titel als Quelle anzeigen"
 	},
 	"url": {
-		"message": "nur die URL"
+		"message": "Normale URL"
 	},
 	"user1": {
-		"message": "Benutzerdefiniertes Kommando 1"
+		"message": "Benutzerdefinierter Befehl 1"
 	},
 	"user2": {
-		"message": "Benutzerdefiniertes Kommando 2"
+		"message": "Benutzerdefinierter Befehl 2"
 	},
 	"user3": {
-		"message": "Benutzerdefiniertes Kommando 3"
+		"message": "Benutzerdefinierter Befehl 3"
 	},
 	"userCommand": {
-		"message": "benutzerdefiniertes Kommando"
+		"message": "Benutzerdefinierte Befehle"
 	},
 	"userCommandTip": {
 		"message": "Verfügbare Felder:\n%url%\n%filename%\n%useragent%\n%referer%\n%cookie%\n%proxy%\n%origin%\n%tabtitle%\n%timestamp%"
 	},
 	"ytdlp": {
 		"message": "yt-dlp Kommando"
+	},
+	"primedlRelayEnabled": {
+		"message": "Erkannte Streams an primedl senden"
+	},
+	"primedlRelayPort": {
+		"message": "primedl lokaler Server-Port"
+	},
+	"primedlRelayTip": {
+		"message": "primedl muss auf diesem Port laufen, um Streams zu empfangen. Standard: 7421."
+	},
+	"cookieSection": {
+		"message": "Cookies"
+	},
+	"cookieCount": {
+		"message": "Cookies gefunden"
+	},
+	"cookieFormat": {
+		"message": "Format"
+	},
+	"netscape": {
+		"message": "Netscape (.txt)"
+	},
+	"json": {
+		"message": "JSON"
+	},
+	"header": {
+		"message": "Header-String"
+	},
+	"cookieExport": {
+		"message": "Exportieren"
+	},
+	"cookieExportAs": {
+		"message": "Exportieren als"
+	},
+	"cookieCopy": {
+		"message": "Kopieren"
+	},
+	"cookieCopied": {
+		"message": "Kopiert!"
+	},
+	"cookieExportAll": {
+		"message": "Alle exportieren"
 	}
 }

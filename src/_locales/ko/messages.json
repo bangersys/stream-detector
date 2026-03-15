@@ -3,13 +3,13 @@
 		"message": "non-manifest 파일 자동 다운로드"
 	},
 	"autoDownloadTip": {
-		"message": "기본 다운로드 폴더로 파일을 저장합니다. 실시간 스트림을 다운로드할 때 유용합니다. '다이렉트 링크 형식 무시' 옵션이 체크되지 않을 때만 작동합니다. 알림을 표시하지 않습니다. 불필요한 다운로드를 방지하기 위해 블랙리스트 기능을 사용하십시오."
+		"message": "기본 다운로드 폴더로 파일을 저장합니다. 실시간 스트림을 다운로드할 때 유용합니다. '다이렉트 링크 형식 무시' 옵션이 체크되지 않을 때만 작동합니다. 불필요한 다운로드를 방지하기 위해 블랙리스트 기능을 사용하십시오."
 	},
 	"blacklistPref": {
 		"message": "컨텐츠 블랙리스트 사용"
 	},
 	"blacklistTip": {
-		"message": "한 줄에 한 항목씩 입력하세요. 대소문자 구별없음. 스트림/파일 타입, content-type 헤더, URL에 영향을 줍니다. 입력한 문자열을 포함하는 모든 URL을 무시합니다."
+		"message": "한 줄에 한 항목씩 입력하세요. 대소문자 구별없음."
 	},
 	"buttonClick": {
 		"message": "브라우저 액션 버튼 기능"
@@ -57,7 +57,7 @@
 		"message": "JSON 형식으로 설정값 내보내기/불러오기"
 	},
 	"extText": {
-		"message": "HLS/DASH/HDS/MSS 스트림 형태의 영상과 자막 주소를 추출하고 다운로드할 수 있는 부가기능입니다. 사용자 지정 파일 확장자와 content-type 헤더 또한 지정할 수 있습니다. yt-dlp/FFmpeg/Streamlink/hlsdl/N_m3u8DL-RE 프리셋을 제공하여 명령어를 일일이 작성할 필요가 없습니다."
+		"message": "HLS/DASH/HDS/MSS 스트림을 감지하여 primedl로 전달합니다. yt-dlp, FFmpeg, Streamlink 등의 명령어를 생성합니다."
 	},
 	"ffmpeg": {
 		"message": "FFmpeg 명령어"
@@ -99,7 +99,7 @@
 		"message": "스트림 무시하기"
 	},
 	"manifestTip": {
-		"message": "이 설정값은 본 부가 기능의 주요 기능을 비활성화합니다. 확실히 알고 있는 경우에만 이용해 주시기 바랍니다. 예시, 특정 파일 확장자/컨텐츠 타입만 감지하고 싶은 경우"
+		"message": "본 부가 기능의 주요 기능입니다. 특정 파일 확장자/컨텐츠 타입만 감지하고 싶은 경우 비활성화하세요."
 	},
 	"multithreadPref": {
 		"message": "동시 다운로드 분할 수 (yt-dlp)"
@@ -189,7 +189,7 @@
 		"message": "사용자 정의 명령어에 regex 사용"
 	},
 	"regexCommandTip": {
-		"message": "string(문자열)로 입력하세요. 예시, ab+c. 최종 사용자 명령에서 교체(replacement)를 수행합니다. 교체 필드가 비어 있으면 매칭되는 항목은 제거됩니다."
+		"message": "string으로 입력하세요. 예: ab+c. 최종 사용자 명령에서 교체를 수행합니다."
 	},
 	"regexWarning": {
 		"message": "잘못된 정규 표현식."
@@ -249,9 +249,51 @@
 		"message": "사용자 정의 명령어"
 	},
 	"userCommandTip": {
-		"message": "예시:\n%url%\n%filename%\n%useragent%\n%referer%\n%cookie%\n%proxy%\n%origin%\n%tabtitle%\n%timestamp%"
+		"message": "사용 가능한 변수:\n%url%\n%filename%\n%useragent%\n%referer%\n%cookie%\n%proxy%\n%origin%\n%tabtitle%\n%timestamp%"
 	},
 	"ytdlp": {
 		"message": "yt-dlp 명령어"
+	},
+	"primedlRelayEnabled": {
+		"message": "감지된 스트림을 primedl로 전송"
+	},
+	"primedlRelayPort": {
+		"message": "primedl 로컬 서버 포트"
+	},
+	"primedlRelayTip": {
+		"message": "primedl이 이 포트에서 실행 중이어야 합니다. 기본값: 7421."
+	},
+	"cookieSection": {
+		"message": "쿠키"
+	},
+	"cookieCount": {
+		"message": "개의 쿠키 발견"
+	},
+	"cookieFormat": {
+		"message": "형식"
+	},
+	"netscape": {
+		"message": "Netscape (.txt)"
+	},
+	"json": {
+		"message": "JSON"
+	},
+	"header": {
+		"message": "헤더 문자열"
+	},
+	"cookieExport": {
+		"message": "내보내기"
+	},
+	"cookieExportAs": {
+		"message": "다른 이름으로 저장"
+	},
+	"cookieCopy": {
+		"message": "복사"
+	},
+	"cookieCopied": {
+		"message": "복사됨!"
+	},
+	"cookieExportAll": {
+		"message": "전체 내보내기"
 	}
 }

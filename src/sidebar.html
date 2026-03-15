@@ -103,6 +103,47 @@
 				<span id="primedlStatus" class="relay-disconnected">○ primedl offline</span>
 			</div>
 
+			<!-- ── Cookies section ──────────────────────────────────────────── -->
+			<div id="cookieSection">
+				<button type="button" id="cookieToggle" aria-expanded="false">
+					<span id="cookieToggleIcon">▶</span>
+					<label for="cookieSection"></label>
+					<span id="cookieCount" class="cookie-count"></span>
+				</button>
+
+				<div id="cookiePanel" hidden>
+					<div class="cookie-controls">
+						<!-- Format selector -->
+						<div class="cookie-format-row">
+							<label for="cookieFormat"></label>
+							<select id="cookieFormat">
+								<option value="netscape"></option>
+								<option value="json"></option>
+								<option value="header"></option>
+							</select>
+						</div>
+
+						<!-- Action buttons -->
+						<div class="cookie-btn-row">
+							<button type="button" id="cookieExport">
+								<label for="cookieExport"></label>
+							</button>
+							<button type="button" id="cookieExportAs">
+								<label for="cookieExportAs"></label>
+							</button>
+							<button type="button" id="cookieCopy" class="cookie-copy-btn">
+								<label for="cookieCopy" class="default-label"></label>
+								<label for="cookieCopied" class="copied-label" hidden></label>
+							</button>
+							<button type="button" id="cookieExportAll">
+								<label for="cookieExportAll"></label>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- ── End cookies section ─────────────────────────────────────── -->
+
 		</div>
 
 		<script type="module" src="js/popup.js"></script>

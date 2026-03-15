@@ -4,8 +4,10 @@
 	"description": "__MSG_extText__",
 	"manifest_version": 2,
 	"default_locale": "en",
+	"incognito": "split",
 	"permissions": [
 		"<all_urls>",
+		"activeTab",
 		"clipboardWrite",
 		"downloads",
 		"notifications",

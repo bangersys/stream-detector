@@ -1,96 +1,96 @@
 {
 	"autoDownloadPref": {
-		"message": "自動でnon-manifestファイルをダウンロードする"
+		"message": "非マニフェストファイルを自動ダウンロード"
 	},
 	"autoDownloadTip": {
-		"message": "標準のダウンロードフォルダにファイルを保存します。視聴中にストリーミングをダウンロードする場合などに便利です。URLリストへの追加や通知は行いませんので、スパムの心配はありません。不要なダウンロードを防ぐために、URLブラックリストを使用します。"
+		"message": "ファイルをデフォルトのダウンロードフォルダに保存します。視聴しながらストリームをダウンロードする際に便利です。「メディアファイルへの直接リンクを無視する」がオフの場合のみ動作します。通知は表示されません。不要なダウンロードを防ぐにはURLブラックリストを使用してください。"
 	},
 	"blacklistPref": {
-		"message": "URLブラックリストを使う"
+		"message": "コンテンツブラックリストを使用"
 	},
 	"blacklistTip": {
-		"message": "1行に1項目です。送信元と送信先のURLの両方が対象です。つまり、アドオンは効果的にこれらのフレーズを含むWebサイトを無効にするだけでなく、ストリームURLも無視します。"
+		"message": "1行に1つ、大文字小文字を区別しません。ストリーム/ファイルタイプ、Content-Typeヘッダー、URLに適用されます。"
 	},
 	"buttonClick": {
-		"message": "ブラウザのアクションボタン機能"
+		"message": "ブラウザアクションボタンの機能"
 	},
 	"clearList": {
-		"message": "このURLリストを消去"
+		"message": "このURLリストをクリア"
 	},
 	"copyAll": {
-		"message": "表示URLを全てコピー"
+		"message": "表示中のURLをすべてコピー"
 	},
 	"copyMethod": {
 		"message": "ストリームURLのコピー形式"
 	},
 	"customCommandPref": {
-		"message": "CLIパラメータを追加する"
+		"message": "追加のコマンドラインパラメータ"
 	},
 	"customCtPref": {
-		"message": "追加のContent-Typeヘッダを検出"
+		"message": "追加のContent-Typeヘッダーを検出"
 	},
 	"customCtTip": {
-		"message": "1行に1項目です。大文字・小文字を区別しません。"
+		"message": "1行に1つ。大文字小文字を区別しません。"
 	},
 	"customExtPref": {
 		"message": "追加のファイル拡張子を検出"
 	},
 	"customExtTip": {
-		"message": "1行に1項目です。"
+		"message": "1行に1つ。"
 	},
 	"deleteTooltip": {
-		"message": "クリックしてこのURLを削除"
+		"message": "クリックしてURLを削除。"
 	},
 	"disablePref": {
-		"message": "検出停止"
+		"message": "検出を無効にする"
 	},
 	"downloadDirectPref": {
-		"message": "URLをコピーする代わりに、non-manifestファイルをダウンロードする"
+		"message": "非マニフェストファイルをURLコピーの代わりにダウンロード"
 	},
 	"downloaderPref": {
-		"message": "外部ダウンローダを使う"
+		"message": "yt-dlpの外部ダウンローダーを使用"
 	},
 	"exportButton": {
 		"message": "エクスポート"
 	},
 	"exportSettings": {
-		"message": "JSONファイルへ/から設定をエクスポート/インポートする"
+		"message": "設定をJSONファイルにエクスポート/インポート"
 	},
 	"extText": {
-		"message": "HLS/DASH/HDS/MSSストリームで使用されるプレイリストと字幕、およびカスタムファイル拡張子やContent-Typeヘッダを検出します。既製のyt-dlp/FFmpeg/Streamlink/hlsdl/N_m3u8DL-REのコマンドを組み立てます。"
+		"message": "HLS/DASH/HDS/MSSストリームを検出してprimedlに転送します。yt-dlp、FFmpeg、Streamlinkなどのコマンドを生成します。"
 	},
 	"ffmpeg": {
-		"message": "FFmpeg コマンド"
+		"message": "FFmpegコマンド"
 	},
 	"file": {
-		"message": "ファイルに保存"
+		"message": "ファイル"
 	},
 	"fileExtension": {
 		"message": "ファイル拡張子"
 	},
 	"filePref": {
-		"message": "メディアファイルの直接リンクを無視する"
+		"message": "メディアファイルへの直接リンクを無視する"
 	},
 	"fileSizePref": {
-		"message": "これよりも小さいサイズのメディアファイルを無視する"
+		"message": "次のサイズ未満のメディアファイルを無視"
 	},
 	"filenamePref": {
-		"message": "ファイル名にタブのタイトルを使用"
+		"message": "タブタイトルをファイル名として使用"
 	},
 	"filterInput": {
 		"message": "フィルター"
 	},
 	"headersPref": {
-		"message": "追加のヘッダを含める"
+		"message": "追加ヘッダーを含める"
 	},
 	"hlsdl": {
-		"message": "hlsdl コマンド"
+		"message": "hlsdlコマンド"
 	},
 	"importButton": {
 		"message": "インポート"
 	},
 	"importButtonFailure": {
-		"message": "設定をインポートできません。"
+		"message": "設定をインポートできませんでした。"
 	},
 	"kodiUrl": {
 		"message": "Kodi URL"
@@ -99,22 +99,22 @@
 		"message": "ストリームを無視する"
 	},
 	"manifestTip": {
-		"message": "これはこのアドオンの主目的です。例えば、カスタムのファイル拡張子/Content-Typeのみを使用したい場合は、無効にしてください。"
+		"message": "これはアドオンの主な目的です。カスタム拡張子/コンテンツタイプのみをキャプチャしたい場合は無効にしてください。"
 	},
 	"multithreadPref": {
-		"message": "yt-dlpでフラグメントファイルを多重同時ダウンロードする"
+		"message": "yt-dlpで複数のフラグメントを同時ダウンロード"
 	},
 	"nm3u8dl": {
-		"message": "N_m3u8DL-RE コマンド"
+		"message": "N_m3u8DL-REコマンド"
 	},
 	"noRestorePref": {
-		"message": "起動時に以前のセッションを無視する"
+		"message": "前のセッション機能を無効にする（起動時にエントリをクリア）"
 	},
 	"notifCopiedText": {
-		"message": "次のURLのコピーに成功しました:\n"
+		"message": "以下のURL(s)のコピーに成功しました:\n"
 	},
 	"notifCopiedTitle": {
-		"message": "URLをコピーしました!"
+		"message": "URL(s)をコピーしました!"
 	},
 	"notifDetectPref": {
 		"message": "検出通知を無効にする"
@@ -189,7 +189,7 @@
 		"message": "ユーザ定義コマンドで正規表現を使う"
 	},
 	"regexCommandTip": {
-		"message": "完全な正規表現とオプションのフラグを使用します (例: /ab+c/i)。最終的なユーザーコマンドで置換を行います。置換フィールドが空だと、マッチパターンが削除されます。"
+		"message": "文字列として入力してください。例: ab+c。最終的なユーザーコマンドで置換を行います。置換フィールドが空だとマッチパターンが削除されます。"
 	},
 	"regexWarning": {
 		"message": "正規表現が正しくありません。"
@@ -253,5 +253,47 @@
 	},
 	"ytdlp": {
 		"message": "yt-dlp コマンド"
+	},
+	"primedlRelayEnabled": {
+		"message": "検出されたストリームをprimedlに送信"
+	},
+	"primedlRelayPort": {
+		"message": "primedlローカルサーバーポート"
+	},
+	"primedlRelayTip": {
+		"message": "primedlはこのポートで実行されている必要があります。デフォルト: 7421。"
+	},
+	"cookieSection": {
+		"message": "クッキー"
+	},
+	"cookieCount": {
+		"message": "件のクッキー"
+	},
+	"cookieFormat": {
+		"message": "フォーマット"
+	},
+	"netscape": {
+		"message": "Netscape (.txt)"
+	},
+	"json": {
+		"message": "JSON"
+	},
+	"header": {
+		"message": "ヘッダー文字列"
+	},
+	"cookieExport": {
+		"message": "エクスポート"
+	},
+	"cookieExportAs": {
+		"message": "名前を付けて保存"
+	},
+	"cookieCopy": {
+		"message": "コピー"
+	},
+	"cookieCopied": {
+		"message": "コピーしました!"
+	},
+	"cookieExportAll": {
+		"message": "全てエクスポート"
 	}
 }

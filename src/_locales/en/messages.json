@@ -254,7 +254,6 @@
 	"ytdlp": {
 		"message": "yt-dlp command"
 	},
-
 	"primedlRelayEnabled": {
 		"message": "Send detected streams to primedl"
 	},
@@ -263,5 +262,38 @@
 	},
 	"primedlRelayTip": {
 		"message": "primedl must be running on this port to receive streams. Default: 7421."
+	},
+	"cookieSection": {
+		"message": "Cookies"
+	},
+	"cookieCount": {
+		"message": "cookies found"
+	},
+	"cookieFormat": {
+		"message": "Format"
+	},
+	"netscape": {
+		"message": "Netscape (.txt)"
+	},
+	"json": {
+		"message": "JSON"
+	},
+	"header": {
+		"message": "Header string"
+	},
+	"cookieExport": {
+		"message": "Export"
+	},
+	"cookieExportAs": {
+		"message": "Export As"
+	},
+	"cookieCopy": {
+		"message": "Copy"
+	},
+	"cookieCopied": {
+		"message": "Copied!"
+	},
+	"cookieExportAll": {
+		"message": "Export All"
 	}
 }
