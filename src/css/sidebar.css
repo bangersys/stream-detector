@@ -1,3 +1,5 @@
+/* ── Base ─────────────────────────────────────────────────────────────── */
+
 html,
 body {
 	padding: 0;
@@ -21,13 +23,99 @@ body {
 	display: flex;
 	flex-direction: column;
 	width: 100%;
+	height: 100%;
 	min-height: 0;
 	overflow: hidden;
 }
 
+/* ── Tab row ─────────────────────────────────────────────────────────── */
+
+.tab-row {
+	display: flex;
+	border-bottom: 1px solid gainsboro;
+	flex-shrink: 0;
+}
+
+.tab-label {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex: 1;
+	justify-content: center;
+	padding: 6px 8px;
+	cursor: pointer;
+	font-size: 0.85em;
+	white-space: nowrap;
+	user-select: none;
+}
+
+.tab-label:hover {
+	background: gainsboro;
+}
+
+.tab-label input[type="radio"] {
+	margin: 0;
+	cursor: pointer;
+}
+
+/* ── Toolbar row (filter + method) ───────────────────────────────────── */
+
+.toolbar-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 8px;
+	border-bottom: 1px solid gainsboro;
+	flex-shrink: 0;
+}
+
+.filter-group {
+	display: flex;
+	align-items: center;
+	flex: 1;
+	gap: 2px;
+}
+
+.filter-group input[type="text"] {
+	flex: 1;
+	min-width: 0;
+	padding: 3px 6px;
+	font-size: 0.9em;
+	border: 1px solid #ccc;
+	border-radius: 3px;
+	background: inherit;
+	color: inherit;
+}
+
+#clearFilterInput {
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: #999;
+	padding: 0 2px;
+	font-size: 0.85em;
+	line-height: 1;
+}
+
+#clearFilterInput:hover {
+	color: #555;
+}
+
+.method-group select {
+	font-size: 0.85em;
+	padding: 3px 5px;
+	border: 1px solid #ccc;
+	border-radius: 3px;
+	background: inherit;
+	color: inherit;
+}
+
+/* ── URL list table ───────────────────────────────────────────────────── */
+
 #urlList {
 	overflow-y: auto;
 	flex: 1;
+	min-height: 0;
 }
 
 table {
@@ -37,81 +125,135 @@ table {
 	user-select: text;
 }
 
-table,
 th,
 td {
-	padding: 0.6em 0.75em;
-	text-align: left;
+	padding: 0.5em 0.75em;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-.urlEntry,
-#urlList {
-	border: 1px solid gainsboro;
-	border-width: 1px 0;
+.th-center {
+	text-align: center;
+}
+
+.th-left {
+	text-align: left;
+}
+
+td.td-center {
+	text-align: center;
+}
+
+/* Sidebar columns: content takes all space, delete is fixed narrow */
+.col-content {
+	width: auto;
+}
+.col-del {
+	width: 28px;
+}
+
+thead {
+	border-bottom: 1px solid gainsboro;
+	font-size: 0.82em;
+	opacity: 0.7;
+}
+
+.urlEntry {
+	border-bottom: 1px solid gainsboro;
+}
+
+.urlEntry:last-child {
+	border-bottom: 0;
 }
 
 .urlEntry:hover,
 .urlEntry:focus-within {
-	background-color: gainsboro;
+	background-color: #f0f0f3;
 }
 
-.urlEntry:last-of-type {
-	border-bottom-width: 0;
-}
-
-.urlCell {
-	white-space: initial;
-	word-break: break-all;
-	cursor: pointer;
-	text-overflow: initial;
-}
-
+/* Sidebar URL entry spans — stacked inside the content cell */
 .urlSource {
 	display: block;
-	font-size: 0.85em;
+	font-size: 0.82em;
 	opacity: 0.65;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .urlFilename {
 	display: block;
 	font-weight: 600;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .urlInfo {
 	display: block;
-	font-size: 0.8em;
+	font-size: 0.78em;
 	opacity: 0.55;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
-input,
-select {
-	margin: auto 0.25em;
+/* ── Action bar ───────────────────────────────────────────────────────── */
+
+.action-bar {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 5px 8px;
+	border-top: 1px solid gainsboro;
+	flex-shrink: 0;
+	flex-wrap: wrap;
 }
 
-input,
-select,
-label {
-	vertical-align: middle;
-}
-
-a {
-	color: inherit;
-}
-
-#clearFilterInput {
-	text-decoration: none;
+.action-bar-check {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 0.82em;
 	cursor: pointer;
+	margin-right: auto;
+	user-select: none;
 }
 
-/* primedl relay status */
+.action-bar-check input {
+	cursor: pointer;
+	margin: 0;
+}
+
+.action-bar button {
+	padding: 3px 8px;
+	font-size: 0.82em;
+	cursor: pointer;
+	border: 1px solid #ccc;
+	border-radius: 3px;
+	background: #f5f5f5;
+	color: inherit;
+	white-space: nowrap;
+}
+
+.action-bar button:hover {
+	background: #e8e8e8;
+}
+
+.action-bar button label {
+	cursor: pointer;
+	pointer-events: none;
+}
+
+/* ── Relay status bar ─────────────────────────────────────────────────── */
+
 #primedlStatusBar {
 	padding: 4px 10px;
 	text-align: right;
 	font-size: 0.75em;
 	border-top: 1px solid gainsboro;
+	flex-shrink: 0;
 }
 
 .relay-connected {
@@ -120,31 +262,6 @@ a {
 
 .relay-disconnected {
 	color: #999;
-}
-
-@media (prefers-color-scheme: dark) {
-	body {
-		background: #202023;
-		color: #fff;
-	}
-
-	.urlEntry:hover,
-	.urlEntry:focus-within {
-		background-color: #3a3a3f;
-		color: #fff;
-	}
-
-	#primedlStatusBar {
-		border-top-color: #3a3a3f;
-	}
-
-	.relay-connected {
-		color: #5cb85c;
-	}
-
-	.relay-disconnected {
-		color: #666;
-	}
 }
 
 /* ── Cookie section ───────────────────────────────────────────────────── */
@@ -178,8 +295,7 @@ a {
 	flex-shrink: 0;
 }
 
-#cookieToggle label {
-	cursor: pointer;
+.cookie-section-title {
 	flex: 1;
 	font-weight: 500;
 	opacity: 0.8;
@@ -207,7 +323,7 @@ a {
 	font-size: 0.82em;
 }
 
-.cookie-format-row label {
+#cookieSection .cookie-format-row label {
 	opacity: 0.7;
 	white-space: nowrap;
 }
@@ -216,7 +332,7 @@ a {
 	flex: 1;
 	font-size: 0.9em;
 	padding: 2px 4px;
-	border: 1px solid gainsboro;
+	border: 1px solid #ccc;
 	border-radius: 3px;
 	background: inherit;
 	color: inherit;
@@ -229,8 +345,8 @@ a {
 }
 
 .cookie-btn-row button {
-	padding: 4px 0;
-	font-size: 0.75em;
+	padding: 4px 4px;
+	font-size: 0.78em;
 	border: 1px solid #ccc;
 	border-radius: 3px;
 	background: #f5f5f5;
@@ -256,27 +372,66 @@ a {
 	color: #155724;
 }
 
+/* ── Dark mode ────────────────────────────────────────────────────────── */
+
 @media (prefers-color-scheme: dark) {
+	body {
+		background: #202023;
+		color: #e8e8ec;
+	}
+
+	.tab-row,
+	.toolbar-row,
+	thead,
+	.urlEntry,
+	.action-bar,
+	#primedlStatusBar,
 	#cookieSection {
-		border-top-color: #3a3a3f;
+		border-color: #3a3a3f;
 	}
 
-	#cookieToggle:hover {
-		background-color: #3a3a3f;
+	.tab-label:hover {
+		background: #2c2c30;
 	}
 
+	.filter-group input[type="text"],
+	.method-group select,
 	.cookie-format-row select {
 		background: #2c2c30;
 		border-color: #444;
+		color: #e8e8ec;
 	}
 
+	#clearFilterInput:hover {
+		color: #aaa;
+	}
+
+	.urlEntry:hover,
+	.urlEntry:focus-within {
+		background-color: #2c2c30;
+	}
+
+	.action-bar button,
 	.cookie-btn-row button {
 		background: #2c2c30;
 		border-color: #444;
 	}
 
+	.action-bar button:hover,
 	.cookie-btn-row button:hover {
 		background: #3a3a3f;
+	}
+
+	.relay-connected {
+		color: #5cb85c;
+	}
+
+	.relay-disconnected {
+		color: #666;
+	}
+
+	#cookieToggle:hover {
+		background-color: #2c2c30;
 	}
 
 	.cookie-copy-btn.cookie-copied {

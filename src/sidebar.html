@@ -10,112 +10,90 @@
 		<div id="container">
 
 			<!-- Tab selector -->
-			<table>
-				<tbody>
-					<tr>
-						<td>
-							<input class="option" type="radio" id="tabThis" name="tab" />
-							<label for="tabThis"></label>
-						</td>
-						<td>
-							<input class="option" type="radio" id="tabAll" name="tab" />
-							<label for="tabAll"></label>
-						</td>
-						<td>
-							<input class="option" type="radio" id="tabPrevious" name="tab" />
-							<label for="tabPrevious"></label>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+			<div class="tab-row">
+				<label class="tab-label">
+					<input class="option" type="radio" id="tabThis" name="tab" checked />
+					<span data-i18n="tabThis"></span>
+				</label>
+				<label class="tab-label">
+					<input class="option" type="radio" id="tabAll" name="tab" />
+					<span data-i18n="tabAll"></span>
+				</label>
+				<label class="tab-label">
+					<input class="option" type="radio" id="tabPrevious" name="tab" />
+					<span data-i18n="tabPrevious"></span>
+				</label>
+			</div>
 
 			<!-- Filter + copy method -->
-			<table>
-				<tbody>
-					<tr>
-						<td>
-							<label for="filterInput"></label>
-							<input class="option" type="text" id="filterInput" />
-							<a id="clearFilterInput" role="button" tabindex="0">✖</a>
-						</td>
-						<td>
-							<label for="copyMethod"></label>
-						</td>
-						<td>
-							<select class="option" id="copyMethod">
-								<option value="url"></option>
-								<option value="kodiUrl"></option>
-								<option value="tableForm"></option>
-								<option value="ytdlp"></option>
-								<option value="ffmpeg"></option>
-								<option value="streamlink"></option>
-								<option value="hlsdl"></option>
-								<option value="nm3u8dl"></option>
-								<option value="user1"></option>
-								<option value="user2"></option>
-								<option value="user3"></option>
-							</select>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+			<div class="toolbar-row">
+				<div class="filter-group">
+					<input class="option" type="text" id="filterInput" />
+					<button type="button" id="clearFilterInput" aria-label="Clear filter">✖</button>
+				</div>
+				<div class="method-group">
+					<select class="option" id="copyMethod" aria-label="Copy method">
+						<option value="url"></option>
+						<option value="kodiUrl"></option>
+						<option value="tableForm"></option>
+						<option value="ytdlp"></option>
+						<option value="ffmpeg"></option>
+						<option value="streamlink"></option>
+						<option value="hlsdl"></option>
+						<option value="nm3u8dl"></option>
+						<option value="user1"></option>
+						<option value="user2"></option>
+						<option value="user3"></option>
+					</select>
+				</div>
+			</div>
 
-			<!-- URL list -->
+			<!-- URL list (compact 2-column: content | delete) -->
 			<div id="urlList">
 				<table>
 					<colgroup>
-						<col style="width: 95%" />
-						<col style="width: 5%" />
+						<col class="col-content" />
+						<col class="col-del" />
 					</colgroup>
 					<thead id="headers">
 						<tr>
-							<th><label for="popupFilename"></label></th>
-							<th>✖</th>
+							<th class="th-left"><label for="popupFilename"></label></th>
+							<th class="th-center">✖</th>
 						</tr>
 					</thead>
 					<tbody id="popupUrlList"></tbody>
 				</table>
 			</div>
 
-			<!-- Bottom bar -->
-			<table>
-				<tbody>
-					<tr>
-						<td>
-							<input class="option" id="disablePref" type="checkbox" />
-							<label for="disablePref"></label>
-						</td>
-						<td>
-							<button type="button" id="copyAll"><label for="copyAll"></label></button>
-						</td>
-						<td>
-							<button type="button" id="clearList"><label for="clearList"></label></button>
-						</td>
-						<td>
-							<button type="button" id="openOptions"><label for="openOptions"></label></button>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+			<!-- Bottom action bar -->
+			<div class="action-bar">
+				<label class="action-bar-check">
+					<input class="option" id="disablePref" type="checkbox" />
+					<span data-i18n="disablePref"></span>
+				</label>
+				<button type="button" id="copyAll"><label for="copyAll"></label></button>
+				<button type="button" id="clearList"><label for="clearList"></label></button>
+				<button type="button" id="openOptions"><label for="openOptions"></label></button>
+			</div>
 
 			<!-- primedl relay status -->
 			<div id="primedlStatusBar">
 				<span id="primedlStatus" class="relay-disconnected">○ primedl offline</span>
 			</div>
 
-			<!-- ── Cookies section ──────────────────────────────────────────── -->
+			<!-- ── Cookies section ─────────────────────────────────────────── -->
 			<div id="cookieSection">
 				<button type="button" id="cookieToggle" aria-expanded="false">
-					<span id="cookieToggleIcon">▶</span>
-					<label for="cookieSection"></label>
+					<span id="cookieToggleIcon" aria-hidden="true">▶</span>
+					<span class="cookie-section-title" data-i18n="cookieSection"></span>
 					<span id="cookieCount" class="cookie-count"></span>
 				</button>
 
 				<div id="cookiePanel" hidden>
 					<div class="cookie-controls">
-						<!-- Format selector -->
+
 						<div class="cookie-format-row">
-							<label for="cookieFormat"></label>
+							<label for="cookieFormat" data-i18n="cookieFormat"></label>
 							<select id="cookieFormat">
 								<option value="netscape"></option>
 								<option value="json"></option>
@@ -123,7 +101,6 @@
 							</select>
 						</div>
 
-						<!-- Action buttons -->
 						<div class="cookie-btn-row">
 							<button type="button" id="cookieExport">
 								<label for="cookieExport"></label>
@@ -132,20 +109,19 @@
 								<label for="cookieExportAs"></label>
 							</button>
 							<button type="button" id="cookieCopy" class="cookie-copy-btn">
-								<label for="cookieCopy" class="default-label"></label>
-								<label for="cookieCopied" class="copied-label" hidden></label>
+								<span class="copy-default" data-i18n="cookieCopy"></span>
+								<span class="copy-done" data-i18n="cookieCopied" hidden></span>
 							</button>
 							<button type="button" id="cookieExportAll">
 								<label for="cookieExportAll"></label>
 							</button>
 						</div>
+
 					</div>
 				</div>
 			</div>
-			<!-- ── End cookies section ─────────────────────────────────────── -->
 
 		</div>
-
 		<script type="module" src="js/popup.js"></script>
 	</body>
 </html>

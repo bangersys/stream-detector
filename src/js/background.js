@@ -469,48 +469,56 @@ const init = async () => {
 	// ─── Message handler ─────────────────────────────────────────────────
 	chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 		(async () => {
-			if (message.delete) {
-				await deleteURL(message);
-			} else if (message.options) {
-				await updateVars();
+			try {
+				if (message.delete) {
+					await deleteURL(message);
+				} else if (message.options) {
+					await updateVars();
 
-				if (
-					disablePref === true &&
-					chrome.webRequest.onBeforeSendHeaders.hasListener(urlFilter) &&
-					chrome.webRequest.onHeadersReceived.hasListener(urlFilter)
-				) {
-					chrome.webRequest.onBeforeSendHeaders.removeListener(urlFilter);
-					chrome.webRequest.onHeadersReceived.removeListener(urlFilter);
-				} else if (
-					disablePref !== true &&
-					!chrome.webRequest.onBeforeSendHeaders.hasListener(urlFilter) &&
-					!chrome.webRequest.onHeadersReceived.hasListener(urlFilter)
-				) {
-					addListeners();
-				}
-				updateIcons();
+					if (
+						disablePref === true &&
+						chrome.webRequest.onBeforeSendHeaders.hasListener(urlFilter) &&
+						chrome.webRequest.onHeadersReceived.hasListener(urlFilter)
+					) {
+						chrome.webRequest.onBeforeSendHeaders.removeListener(urlFilter);
+						chrome.webRequest.onHeadersReceived.removeListener(urlFilter);
+					} else if (
+						disablePref !== true &&
+						!chrome.webRequest.onBeforeSendHeaders.hasListener(urlFilter) &&
+						!chrome.webRequest.onHeadersReceived.hasListener(urlFilter)
+					) {
+						addListeners();
+					}
+					updateIcons();
 
-				// If relay enabled/disabled in options, connect or disconnect immediately
-				await setRelayEnabled(primedlRelayEnabled !== false);
-			} else if (message.reset) {
-				await clearStorage();
-				urlStorage = [];
-				urlStorageRestore = [];
-				await init();
-				chrome.runtime.sendMessage({ options: true }).catch(() => {});
-			} else if (message.primedlReconnect) {
-				// Let popup trigger a relay reconnect
-				relayReconnect();
-			} else if (message.keepalive) {
-				// Keepalive ping from content script — just acknowledge
-				// The act of handling this message keeps the SW alive
-			} else if (message.type === "cookieSave" && message.target === "background") {
-				// Firefox: popup.js cannot call saveAs from a popup context.
-				// The popup sends this message and background.js does the download.
-				const { text, filename, formatKey, saveAs } = message.data ?? {};
-				if (text && filename && formatKey) {
-					await downloadCookiesFile(text, filename, formatKey, saveAs ?? false);
+					// If relay enabled/disabled in options, connect or disconnect immediately
+					await setRelayEnabled(primedlRelayEnabled !== false);
+				} else if (message.reset) {
+					await clearStorage();
+					urlStorage = [];
+					urlStorageRestore = [];
+					await init();
+					chrome.runtime.sendMessage({ options: true }).catch(() => {});
+				} else if (message.primedlReconnect) {
+					// Let popup trigger a relay reconnect
+					relayReconnect();
+				} else if (message.keepalive) {
+					// Keepalive ping from content script — just acknowledge
+					// The act of handling this message keeps the SW alive
+				} else if (message.type === "cookieSave" && message.target === "background") {
+					// Firefox: popup.js cannot call saveAs from a popup context.
+					// The popup sends this message and background.js does the download.
+					const { text, filename, formatKey, saveAs } = message.data ?? {};
+					if (text && filename && formatKey) {
+						await downloadCookiesFile(text, filename, formatKey, saveAs ?? false);
+					}
 				}
+			} catch (err) {
+				// Always call sendResponse so the popup's await never hangs.
+				// Log the error so it's visible in the background console.
+				console.error("[primedl] message handler error:", err);
+				sendResponse({ ok: false, error: String(err) });
+				return;
 			}
 
 			sendResponse({ ok: true });

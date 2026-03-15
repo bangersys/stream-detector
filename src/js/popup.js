@@ -19,7 +19,6 @@ import {
 } from "./cookies/index.js";
 
 // ─── Browser detection ────────────────────────────────────────────────────
-const _browserAction = chrome.action ?? chrome.browserAction;
 const isChrome = chrome.runtime.getURL("").startsWith("chrome-extension://");
 
 const _ = chrome.i18n.getMessage;
@@ -28,13 +27,11 @@ const _ = chrome.i18n.getMessage;
 const table = document.getElementById("popupUrlList");
 
 let titlePref;
-let _filenamePref;
-let _timestampPref;
 let downloadDirectPref;
 let newline;
 let recentPref;
 let recentAmount;
-let _noRestorePref;
+let noRestorePref;
 let urlList = [];
 
 // ─── Cookie section state ─────────────────────────────────────────────────
@@ -312,7 +309,11 @@ const copyURL = async (info) => {
 const insertPlaceholder = () => {
 	const row = table.insertRow();
 	const cell = row.insertCell();
-	cell.colSpan = 6;
+	// Popup has 6 columns, sidebar has 2
+	cell.colSpan = document.body.id === "popup" ? 6 : 2;
+	cell.style.textAlign = "center";
+	cell.style.padding = "1em";
+	cell.style.opacity = "0.55";
 	cell.textContent = _("placeholderCell");
 };
 
@@ -320,18 +321,23 @@ const insertList = (urls) => {
 	for (const e of urls) {
 		const row = table.insertRow();
 		row.className = "urlEntry";
-		const cellName = row.insertCell();
-		const cellDel = row.insertCell();
 
 		const contentSize = e.headers?.find((h) => h.name.toLowerCase() === "content-length")?.value;
 		const source = titlePref && e.tabData?.title ? e.tabData.title : e.hostname;
 
-		// Popup (full table) vs sidebar (compact)
 		if (document.body.id === "popup") {
+			// ── Popup: 6 cells in order: type | filename | size | source | timestamp | del
 			const cellType = row.insertCell();
+			cellType.className = "td-center";
 			cellType.textContent = e.type;
-			row.insertCell().textContent = e.filename;
+
+			const cellFilename = row.insertCell();
+			cellFilename.className = "td-left";
+			cellFilename.textContent = e.filename;
+			cellFilename.title = e.filename;
+
 			const cellSize = row.insertCell();
+			cellSize.className = "td-center";
 			if (
 				(e.category === "files" || e.category === "custom") &&
 				contentSize &&
@@ -342,40 +348,79 @@ const insertList = (urls) => {
 			} else {
 				cellSize.textContent = "-";
 			}
-			row.insertCell().textContent = source;
-			row.insertCell().textContent = getTimestamp(e.timeStamp);
+
+			const cellSource = row.insertCell();
+			cellSource.className = "td-left";
+			cellSource.textContent = source;
+			cellSource.title = source;
+
+			const cellTimestamp = row.insertCell();
+			cellTimestamp.className = "td-left";
+			cellTimestamp.textContent = getTimestamp(e.timeStamp);
+
+			const cellDel = row.insertCell();
+			cellDel.className = "td-center";
+			cellDel.textContent = "✖";
+			cellDel.title = _("deleteTooltip");
+			cellDel.style.cursor = "pointer";
+			cellDel.addEventListener("click", async (ev) => {
+				ev.stopPropagation();
+				const isPrev = document.getElementById("tabPrevious").checked;
+				chrome.runtime.sendMessage({ delete: [e], previous: isPrev });
+				row.remove();
+				if (table.rows.length === 0) insertPlaceholder();
+			});
+
+			// Click anywhere on the row (except del) → copy URL
+			row.style.cursor = "pointer";
+			row.addEventListener("click", async (ev) => {
+				if (ev.target === cellDel) return;
+				if (downloadDirectPref && e.category !== "stream" && e.category !== "subtitles") {
+					downloadURL(e);
+				} else {
+					await copyURL([e]);
+				}
+			});
 		} else {
-			// Sidebar: compact single cell
-			cellName.innerHTML = `
-				<span class="urlSource">${source}</span>
-				<span class="urlFilename">${e.filename}</span>
-				<span class="urlInfo">${e.type}${contentSize ? ` · ${formatBytes(Number(contentSize))}` : ""} · ${getTimestamp(e.timeStamp)}</span>
-			`;
+			// ── Sidebar: 2 cells — stacked content | del
+			const cellContent = row.insertCell();
+			cellContent.style.cursor = "pointer";
+			// Use textContent-safe span building to avoid XSS from filenames/titles
+			const spanSource = document.createElement("span");
+			spanSource.className = "urlSource";
+			spanSource.textContent = source;
+
+			const spanFilename = document.createElement("span");
+			spanFilename.className = "urlFilename";
+			spanFilename.textContent = e.filename;
+
+			const spanInfo = document.createElement("span");
+			spanInfo.className = "urlInfo";
+			spanInfo.textContent = `${e.type}${contentSize ? ` · ${formatBytes(Number(contentSize))}` : ""} · ${getTimestamp(e.timeStamp)}`;
+
+			cellContent.append(spanSource, spanFilename, spanInfo);
+
+			cellContent.addEventListener("click", async () => {
+				if (downloadDirectPref && e.category !== "stream" && e.category !== "subtitles") {
+					downloadURL(e);
+				} else {
+					await copyURL([e]);
+				}
+			});
+
+			const cellDel = row.insertCell();
+			cellDel.className = "td-center";
+			cellDel.textContent = "✖";
+			cellDel.title = _("deleteTooltip");
+			cellDel.style.cursor = "pointer";
+			cellDel.addEventListener("click", async (ev) => {
+				ev.stopPropagation();
+				const isPrev = document.getElementById("tabPrevious").checked;
+				chrome.runtime.sendMessage({ delete: [e], previous: isPrev });
+				row.remove();
+				if (table.rows.length === 0) insertPlaceholder();
+			});
 		}
-
-		cellDel.textContent = "✖";
-		cellDel.title = _("deleteTooltip");
-
-		// Click row → copy URL
-		const clickTarget = document.body.id === "popup" ? row : cellName;
-		clickTarget.style.cursor = "pointer";
-		clickTarget.addEventListener("click", async () => {
-			if (downloadDirectPref && e.category !== "stream" && e.category !== "subtitles") {
-				downloadURL(e);
-			} else {
-				await copyURL([e]);
-			}
-		});
-
-		// Click X → delete
-		cellDel.style.cursor = "pointer";
-		cellDel.addEventListener("click", async (ev) => {
-			ev.stopPropagation();
-			const isPrev = document.getElementById("tabPrevious").checked;
-			chrome.runtime.sendMessage({ delete: [e], previous: isPrev });
-			row.remove();
-			if (table.rows.length === 0) insertPlaceholder();
-		});
 	}
 };
 
@@ -504,16 +549,16 @@ async function loadCookieSection() {
 function showCookieCopied() {
 	const btn = document.getElementById("cookieCopy");
 	if (!btn) return;
-	const defaultLabel = btn.querySelector(".default-label");
-	const copiedLabel = btn.querySelector(".copied-label");
+	const defaultSpan = btn.querySelector(".copy-default");
+	const doneSpan = btn.querySelector(".copy-done");
 	btn.classList.add("cookie-copied");
-	if (defaultLabel) defaultLabel.hidden = true;
-	if (copiedLabel) copiedLabel.hidden = false;
+	if (defaultSpan) defaultSpan.hidden = true;
+	if (doneSpan) doneSpan.hidden = false;
 	if (cookieCopyTimer) clearTimeout(cookieCopyTimer);
 	cookieCopyTimer = setTimeout(() => {
 		btn.classList.remove("cookie-copied");
-		if (defaultLabel) defaultLabel.hidden = false;
-		if (copiedLabel) copiedLabel.hidden = true;
+		if (defaultSpan) defaultSpan.hidden = false;
+		if (doneSpan) doneSpan.hidden = true;
 	}, 2000);
 }
 
@@ -530,7 +575,11 @@ function initCookieHandlers() {
 		const formatKey = getSelectedFormat();
 		const { text } = await getCookiesForPopup(currentTabUrl, formatKey);
 		if (!text) return;
-		await saveCookiesFromPopup(text, currentHostname, formatKey, false);
+		try {
+			await saveCookiesFromPopup(text, currentHostname, formatKey, false);
+		} catch (err) {
+			console.error("[primedl/popup] Cookie export failed:", err);
+		}
 	});
 
 	// Export As — download with Save As dialog
@@ -539,7 +588,11 @@ function initCookieHandlers() {
 		const formatKey = getSelectedFormat();
 		const { text } = await getCookiesForPopup(currentTabUrl, formatKey);
 		if (!text) return;
-		await saveCookiesFromPopup(text, currentHostname, formatKey, true);
+		try {
+			await saveCookiesFromPopup(text, currentHostname, formatKey, true);
+		} catch (err) {
+			console.error("[primedl/popup] Cookie export-as failed:", err);
+		}
 	});
 
 	// Copy — write serialized cookies to clipboard
@@ -561,7 +614,11 @@ function initCookieHandlers() {
 		const formatKey = getSelectedFormat();
 		const { text } = await getAllBrowserCookies(formatKey);
 		if (!text) return;
-		await saveCookiesFromPopup(text, "all_cookies", formatKey, false);
+		try {
+			await saveCookiesFromPopup(text, "all_cookies", formatKey, false);
+		} catch (err) {
+			console.error("[primedl/popup] Cookie export-all failed:", err);
+		}
 	});
 
 	// Format change — persist selection and refresh count
@@ -592,13 +649,11 @@ const saveOption = (e) => {
 
 const restoreOptions = async () => {
 	titlePref = await getStorage("titlePref");
-	_filenamePref = await getStorage("filenamePref");
-	_timestampPref = await getStorage("timestampPref");
 	downloadDirectPref = await getStorage("downloadDirectPref");
 	newline = (await getStorage("newline")) ?? "\n";
 	recentPref = await getStorage("recentPref");
 	recentAmount = await getStorage("recentAmount");
-	_noRestorePref = await getStorage("noRestorePref");
+	noRestorePref = await getStorage("noRestorePref");
 
 	const options = document.getElementsByClassName("option");
 	for (const option of options) {
@@ -625,6 +680,7 @@ function updateRelayIndicator(status) {
 // ─── i18n ─────────────────────────────────────────────────────────────────
 
 function applyI18n() {
+	// Labels with htmlFor — stream list headers, action bar, cookie format label
 	const labels = document.getElementsByTagName("label");
 	for (const label of labels) {
 		if (label.htmlFor) {
@@ -633,11 +689,22 @@ function applyI18n() {
 		}
 	}
 
+	// Select options — copy method, cookie format
 	const selectOptions = document.getElementsByTagName("option");
 	for (const opt of selectOptions) {
 		if (!opt.textContent) {
 			const msg = _(opt.value);
 			if (msg) opt.textContent = msg;
+		}
+	}
+
+	// data-i18n spans — tab labels, disablePref, cookie section title, copy button text
+	const i18nEls = document.querySelectorAll("[data-i18n]");
+	for (const el of i18nEls) {
+		const key = el.getAttribute("data-i18n");
+		if (key) {
+			const msg = _(key);
+			if (msg) el.textContent = msg;
 		}
 	}
 }
@@ -703,7 +770,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 	});
 
 	// Hide "Previous sessions" tab if disabled in prefs
-	if (_noRestorePref) {
+	if (noRestorePref) {
 		const prevTab = document.getElementById("tabPrevious");
 		if (prevTab?.checked) document.getElementById("tabAll").checked = true;
 		if (prevTab?.parentElement) prevTab.parentElement.style.display = "none";
