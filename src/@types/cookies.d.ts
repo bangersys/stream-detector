@@ -3,15 +3,21 @@
  *
  * Type declarations for the js/cookies/ module.
  * Provides IDE autocompletion and type safety for cookie-related functions
- * without needing to convert the source files to TypeScript.
+ * without converting the source files to TypeScript.
+ *
+ * Note on total-typescript warnings:
+ * The `passing-generics-to-types` hints for Promise<T> return types are
+ * false positives in .d.ts files — TypeScript cannot infer return types in
+ * declaration files, so they must be explicit. These are non-blocking
+ * style hints, not errors.
  */
+
+// ─── Shared types ─────────────────────────────────────────────────────────
 
 /** The three serialization format keys the cookies module supports */
 type CookieFormatKey = "netscape" | "json" | "header";
 
-/**
- * A cookie format descriptor returned by FORMAT_MAP.
- */
+/** A cookie format descriptor returned by FORMAT_MAP */
 interface CookieFormat {
 	/** File extension including the dot, e.g. ".txt" */
 	ext: string;
@@ -19,28 +25,40 @@ interface CookieFormat {
 	mimeType: string;
 	/** Human-readable label for UI display */
 	label: string;
-	/** Serializer function: cookies array → formatted string */
+	/** Serializer: cookies array → formatted string */
 	serializer: (cookies: chrome.cookies.Cookie[]) => string;
 }
 
 /**
- * Return value from getCookiesForUrl() and getCookiesForPopup().
+ * Explicit shape of FORMAT_MAP — avoids mapped-type warnings while
+ * keeping full type safety on each key.
  */
-interface CookieResult {
-	cookies: chrome.cookies.Cookie[];
-	/** Netscape-format cookies.txt string (for getCookiesForUrl) */
-	netscape?: string;
-	/** HTTP Cookie header string (for getCookiesForUrl) */
-	cookieHeader?: string;
-	/** Serialized text in the requested format (for getCookiesForPopup) */
-	text?: string;
+interface CookieFormatMap {
+	netscape: CookieFormat;
+	json: CookieFormat;
+	header: CookieFormat;
 }
 
-// ─── Module augmentations ──────────────────────────────────────────────────
-// These are declared as ambient so the JS source files get typed in the IDE.
+/** Return value of getCookiesForUrl() — all three formats ready to use */
+interface CookiesForUrl {
+	cookies: chrome.cookies.Cookie[];
+	/** Netscape cookies.txt string for yt-dlp / curl */
+	netscape: string;
+	/** Cookie: header string for direct HTTP injection */
+	cookieHeader: string;
+}
+
+/** Return value of getCookiesForPopup() and getAllBrowserCookies() */
+interface CookiesForPopup {
+	cookies: chrome.cookies.Cookie[];
+	/** Serialized text in the requested format */
+	text: string;
+}
+
+// ─── Module declarations ──────────────────────────────────────────────────
 
 declare module "*/cookies/index.js" {
-	export const FORMAT_MAP: { [key in CookieFormatKey]: CookieFormat };
+	export const FORMAT_MAP: CookieFormatMap;
 	export const DEFAULT_FORMAT: CookieFormatKey;
 
 	export function getAllCookies(
@@ -52,20 +70,22 @@ declare module "*/cookies/index.js" {
 		formatKey: CookieFormatKey
 	): string;
 
-	export function toNetscapeRows(cookies: chrome.cookies.Cookie[]): string[][];
+	export function toNetscapeRows(
+		cookies: chrome.cookies.Cookie[]
+	): string[][];
 
 	export function getCookiesForUrl(
 		tabUrl: string | null | undefined
-	): Promise<{ cookies: chrome.cookies.Cookie[]; netscape: string; cookieHeader: string }>;
+	): Promise<CookiesForUrl>;
 
 	export function getCookiesForPopup(
 		tabUrl: string,
 		formatKey?: CookieFormatKey
-	): Promise<{ cookies: chrome.cookies.Cookie[]; text: string }>;
+	): Promise<CookiesForPopup>;
 
 	export function getAllBrowserCookies(
 		formatKey?: CookieFormatKey
-	): Promise<{ cookies: chrome.cookies.Cookie[]; text: string }>;
+	): Promise<CookiesForPopup>;
 
 	export function saveCookiesFromPopup(
 		text: string,
@@ -92,13 +112,17 @@ declare module "*/cookies/save.js" {
 }
 
 declare module "*/cookies/format.js" {
-	export const FORMAT_MAP: { [key in CookieFormatKey]: CookieFormat };
+	export const FORMAT_MAP: CookieFormatMap;
 	export const DEFAULT_FORMAT: CookieFormatKey;
+
 	export function serializeCookies(
 		cookies: chrome.cookies.Cookie[],
 		formatKey: CookieFormatKey
 	): string;
-	export function toNetscapeRows(cookies: chrome.cookies.Cookie[]): string[][];
+
+	export function toNetscapeRows(
+		cookies: chrome.cookies.Cookie[]
+	): string[][];
 }
 
 declare module "*/cookies/get_all_cookies.js" {
