@@ -32,19 +32,26 @@
  * @returns {Promise<chrome.cookies.Cookie[]>}
  */
 export async function getAllCookies(details) {
-	// Auto-resolve the correct cookie store for the active tab
-	details.storeId ??= await getCurrentCookieStoreId();
+	// Clone to avoid mutating the caller's object
+	const opts = { ...details };
+
+	// Only auto-resolve storeId when querying a specific URL/domain.
+	// When exporting ALL cookies (no url, no domain), storeId should be
+	// undefined so Chrome/Firefox query every store.
+	if (opts.storeId === undefined && (opts.url || opts.domain)) {
+		opts.storeId = await getCurrentCookieStoreId();
+	}
 
 	// Separate partitionKey from the rest of the details so we can run
 	// two distinct queries: one with it, one without
-	const { partitionKey, ...detailsWithoutPartitionKey } = details;
+	const { partitionKey, ...detailsWithoutPartitionKey } = opts;
 
 	// Partitioned query — Chrome 119+. If partitionKey was provided, run it
 	// in a promise chain so we can catch() the error on older Chrome.
 	// On Chrome < 119 or Firefox, this query throws and we catch to [].
 	const cookiesWithPartitionKey = partitionKey
 		? await Promise.resolve()
-				.then(() => chrome.cookies.getAll(details))
+				.then(() => chrome.cookies.getAll(opts))
 				.catch(() => [])
 		: [];
 

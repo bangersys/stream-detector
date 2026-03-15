@@ -11,11 +11,11 @@
 import notifIcon from "../img/icon-dark-96.png";
 import { getStorage, saveOptionStorage, setStorage } from "./components/storage.js";
 import {
-	FORMAT_MAP,
 	DEFAULT_FORMAT,
-	getCookiesForPopup,
+	FORMAT_MAP,
 	getAllBrowserCookies,
-	saveCookiesFromPopup,
+	getCookiesForPopup,
+	saveCookiesFromPopup
 } from "./cookies/index.js";
 
 // ─── Browser detection ────────────────────────────────────────────────────
@@ -39,7 +39,6 @@ let urlList = [];
 
 // ─── Cookie section state ─────────────────────────────────────────────────
 let cookiePanelOpen = false;
-let currentCookies = [];
 let currentTabUrl = "";
 let currentHostname = "";
 let cookieCopyTimer = null;
@@ -63,8 +62,8 @@ const downloadURL = (file) => {
 		: {
 				headers: file.headers?.filter((h) => h.name.toLowerCase() === "referer") || [],
 				incognito: file.tabData?.incognito || false,
-				url: file.url,
-		  };
+				url: file.url
+			};
 
 	chrome.downloads.download(dlOptions, (err) => {
 		if (err === undefined) {
@@ -72,7 +71,7 @@ const downloadURL = (file) => {
 				type: "basic",
 				iconUrl: notifIcon,
 				title: _("notifDownErrorTitle"),
-				message: _("notifDownErrorText") + file.filename,
+				message: _("notifDownErrorText") + file.filename
 			});
 		}
 	});
@@ -149,13 +148,11 @@ const copyURL = async (info) => {
 
 		// ── Headers ───────────────────────────────────────────────────────
 		if (await getStorage("headersPref")) {
-			let headerUserAgent =
-				e.headers?.find((h) => h.name.toLowerCase() === "user-agent")?.value ??
-				navigator.userAgent;
+			const headerUserAgent =
+				e.headers?.find((h) => h.name.toLowerCase() === "user-agent")?.value ?? navigator.userAgent;
 
 			let headerCookieRaw = e.headers?.find(
-				(h) =>
-					h.name.toLowerCase() === "cookie" || h.name.toLowerCase() === "set-cookie"
+				(h) => h.name.toLowerCase() === "cookie" || h.name.toLowerCase() === "set-cookie"
 			)?.value;
 			if (headerCookieRaw) {
 				headerCookieRaw = headerCookieRaw.replace(/"/g, "'");
@@ -164,25 +161,18 @@ const copyURL = async (info) => {
 			let headerReferer =
 				e.headers?.find((h) => h.name.toLowerCase() === "referer")?.value ??
 				(e.originUrl || e.documentUrl || e.initiator || e.tabData?.url);
-			if (
-				headerReferer?.startsWith("about:") ||
-				headerReferer?.startsWith("chrome:")
-			) {
+			if (headerReferer?.startsWith("about:") || headerReferer?.startsWith("chrome:")) {
 				headerReferer = undefined;
 			}
 
 			if (headerUserAgent) {
-				if (fileMethod === "kodiUrl")
-					code += `|User-Agent=${encodeURIComponent(headerUserAgent)}`;
+				if (fileMethod === "kodiUrl") code += `|User-Agent=${encodeURIComponent(headerUserAgent)}`;
 				else if (fileMethod === "ffmpeg") code += ` -user_agent "${headerUserAgent}"`;
-				else if (fileMethod === "streamlink")
-					code += ` --http-header "User-Agent=${headerUserAgent}"`;
+				else if (fileMethod === "streamlink") code += ` --http-header "User-Agent=${headerUserAgent}"`;
 				else if (fileMethod === "ytdlp") code += ` --user-agent "${headerUserAgent}"`;
 				else if (fileMethod === "hlsdl") code += ` -u "${headerUserAgent}"`;
-				else if (fileMethod === "nm3u8dl")
-					code += ` --header "User-Agent: ${headerUserAgent}"`;
-				else if (fileMethod.startsWith("user"))
-					code = code.replace(/%useragent%/g, headerUserAgent);
+				else if (fileMethod === "nm3u8dl") code += ` --header "User-Agent: ${headerUserAgent}"`;
+				else if (fileMethod.startsWith("user")) code = code.replace(/%useragent%/g, headerUserAgent);
 			} else if (fileMethod.startsWith("user")) {
 				code = code.replace(/%useragent%/g, "");
 			}
@@ -205,9 +195,7 @@ const copyURL = async (info) => {
 					code = code.replace(/%cookie%/g, headerCookieRaw);
 				}
 			} else if (fileMethod === "ytdlp") {
-				code += isChrome
-					? " --cookies-from-browser chrome"
-					: " --cookies-from-browser firefox";
+				code += isChrome ? " --cookies-from-browser chrome" : " --cookies-from-browser firefox";
 			} else if (fileMethod.startsWith("user")) {
 				code = code.replace(/%cookie%/g, "");
 			}
@@ -305,7 +293,7 @@ const copyURL = async (info) => {
 				title: _("notifCopiedTitle"),
 				message:
 					(list.methodIncomp ? _("notifIncompCopiedText") : _("notifCopiedText")) +
-					list.filenames.join(newline),
+					list.filenames.join(newline)
 			});
 		}
 	} catch (err) {
@@ -314,7 +302,7 @@ const copyURL = async (info) => {
 			type: "basic",
 			iconUrl: notifIcon,
 			title: _("notifErrorTitle"),
-			message: _("notifErrorText") + list.filenames.join(newline),
+			message: _("notifErrorText") + list.filenames.join(newline)
 		});
 	}
 };
@@ -335,9 +323,7 @@ const insertList = (urls) => {
 		const cellName = row.insertCell();
 		const cellDel = row.insertCell();
 
-		const contentSize = e.headers?.find(
-			(h) => h.name.toLowerCase() === "content-length"
-		)?.value;
+		const contentSize = e.headers?.find((h) => h.name.toLowerCase() === "content-length")?.value;
 		const source = titlePref && e.tabData?.title ? e.tabData.title : e.hostname;
 
 		// Popup (full table) vs sidebar (compact)
@@ -405,13 +391,9 @@ const createList = async () => {
 		const tab = await chrome.tabs.query({ active: true, currentWindow: true });
 
 		if (document.getElementById("tabThis").checked) {
-			urlList = tab?.[0]?.id
-				? urlStorage.filter((url) => url.tabId === tab[0].id)
-				: [];
+			urlList = tab?.[0]?.id ? urlStorage.filter((url) => url.tabId === tab[0].id) : [];
 		} else if (document.getElementById("tabAll").checked) {
-			urlList = urlStorage.filter(
-				(url) => url.tabData?.incognito === tab?.[0]?.incognito
-			);
+			urlList = urlStorage.filter((url) => url.tabData?.incognito === tab?.[0]?.incognito);
 		} else if (document.getElementById("tabPrevious").checked) {
 			urlList = urlStorageRestore ?? [];
 		}
@@ -486,7 +468,6 @@ async function toggleCookiePanel() {
 async function refreshCookies() {
 	const formatKey = getSelectedFormat();
 	const { cookies } = await getCookiesForPopup(currentTabUrl, formatKey);
-	currentCookies = cookies;
 	updateCookieCount(cookies.length);
 }
 
@@ -514,7 +495,6 @@ async function loadCookieSection() {
 
 	// Always update count (even when panel is closed) so the number is ready
 	const { cookies } = await getCookiesForPopup(currentTabUrl, getSelectedFormat());
-	currentCookies = cookies;
 	updateCookieCount(cookies.length);
 }
 

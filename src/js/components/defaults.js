@@ -67,7 +67,7 @@ const defaults = {
 
 	// Internal — managed by background.js
 	urlStorageRestore: [],
-	urlStorage: [],
+	urlStorage: []
 };
 
 export default defaults;

@@ -23,20 +23,20 @@ export const FORMAT_MAP = {
 		ext: ".txt",
 		mimeType: "text/plain",
 		label: "Netscape (.txt)",
-		serializer: serializeNetscape,
+		serializer: serializeNetscape
 	},
 	json: {
 		ext: ".json",
 		mimeType: "application/json",
 		label: "JSON",
-		serializer: serializeJson,
+		serializer: serializeJson
 	},
 	header: {
 		ext: ".txt",
 		mimeType: "text/plain",
 		label: "Header string",
-		serializer: serializeHeader,
-	},
+		serializer: serializeHeader
+	}
 };
 
 /** Default format key */
@@ -90,7 +90,7 @@ function serializeNetscape(cookies) {
 		"# This is a generated file! Do not edit.",
 		"",
 		...rows.map((row) => row.join("\t")),
-		"", // trailing newline
+		"" // trailing newline
 	].join("\n");
 }
 

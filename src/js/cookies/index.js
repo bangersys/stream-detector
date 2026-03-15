@@ -14,12 +14,19 @@
  * and provides two high-level helpers with sensible defaults.
  */
 
+import { DEFAULT_FORMAT, FORMAT_MAP, serializeCookies, toNetscapeRows } from "./format.js";
 import { getAllCookies } from "./get_all_cookies.js";
-import { FORMAT_MAP, DEFAULT_FORMAT, serializeCookies, toNetscapeRows } from "./format.js";
 import { downloadCookiesFile } from "./save.js";
 
 // Re-export everything so consumers can import from one place
-export { getAllCookies, FORMAT_MAP, DEFAULT_FORMAT, serializeCookies, toNetscapeRows, downloadCookiesFile };
+export {
+	DEFAULT_FORMAT,
+	downloadCookiesFile,
+	FORMAT_MAP,
+	getAllCookies,
+	serializeCookies,
+	toNetscapeRows
+};
 
 // ─── Detect Firefox once at module load ───────────────────────────────────
 // Consistent with the pattern used throughout the rest of the extension.
@@ -52,7 +59,7 @@ export async function getCookiesForUrl(tabUrl) {
 	try {
 		cookies = await getAllCookies({
 			url: tabUrl,
-			partitionKey: { topLevelSite: url.origin },
+			partitionKey: { topLevelSite: url.origin }
 		});
 	} catch (err) {
 		console.warn("[primedl/cookies] getCookiesForUrl failed:", err);
@@ -61,7 +68,7 @@ export async function getCookiesForUrl(tabUrl) {
 	return {
 		cookies,
 		netscape: serializeCookies(cookies, "netscape"),
-		cookieHeader: serializeCookies(cookies, "header"),
+		cookieHeader: serializeCookies(cookies, "header")
 	};
 }
 
@@ -89,7 +96,7 @@ export async function getCookiesForPopup(tabUrl, formatKey = DEFAULT_FORMAT) {
 	try {
 		cookies = await getAllCookies({
 			url: tabUrl,
-			partitionKey: { topLevelSite: url.origin },
+			partitionKey: { topLevelSite: url.origin }
 		});
 	} catch (err) {
 		console.warn("[primedl/cookies] getCookiesForPopup failed:", err);
@@ -97,7 +104,7 @@ export async function getCookiesForPopup(tabUrl, formatKey = DEFAULT_FORMAT) {
 
 	return {
 		cookies,
-		text: cookies.length > 0 ? serializeCookies(cookies, formatKey) : "",
+		text: cookies.length > 0 ? serializeCookies(cookies, formatKey) : ""
 	};
 }
 
@@ -119,7 +126,7 @@ export async function getAllBrowserCookies(formatKey = DEFAULT_FORMAT) {
 
 	return {
 		cookies,
-		text: cookies.length > 0 ? serializeCookies(cookies, formatKey) : "",
+		text: cookies.length > 0 ? serializeCookies(cookies, formatKey) : ""
 	};
 }
 
@@ -143,7 +150,7 @@ export async function saveCookiesFromPopup(text, hostname, formatKey, saveAs = f
 		await chrome.runtime.sendMessage({
 			type: "cookieSave",
 			target: "background",
-			data: { text, filename, formatKey, saveAs },
+			data: { text, filename, formatKey, saveAs }
 		});
 	} else {
 		// Chrome popup can download directly

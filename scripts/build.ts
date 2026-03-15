@@ -138,7 +138,7 @@ async function main() {
 		const target = buildFirefox ? "firefox" : "chrome";
 		console.log(`\n[primedl] Watching src/ for changes (${target})…`);
 
-		let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+		let debounceTimer: any = null;
 
 		watch(SRC, { recursive: true }, (_event: any, filename: any) => {
 			if (!filename) return;
