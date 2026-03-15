@@ -5,16 +5,18 @@
  * Must be run AFTER `bun run build:firefox` or `bun run build:chrome`.
  *
  * Usage:
- *   bun run build:zip:firefox    → dist/ → dist/primedl-firefox-x.y.z.zip
+ *   bun run build:zip:firefox    → dist/primedl-firefox-x.y.z.zip
  *   bun run build:zip:chrome     → dist-chrome/ → dist/primedl-chrome-x.y.z.zip
  *   bun run build:zip            → both targets
  *
  * The zip contains only the extension files — no source, no node_modules.
  * Chrome Web Store and AMO both accept a flat zip of the extension directory.
+ *
+ * Requires: system `zip` (Linux/macOS) or PowerShell (Windows).
  */
 
-import { existsSync, mkdirSync, readdirSync, statSync } from "fs";
-import { readFile, writeFile } from "fs/promises";
+import { existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from "fs";
+import { readFile } from "fs/promises";
 import path from "path";
 
 const ROOT = path.resolve(import.meta.dir, "..");
@@ -28,39 +30,19 @@ const doChrome = args.includes("--chrome") || args.includes("--all") || args.len
 
 // ─── Read version from package.json ───────────────────────────────────────
 async function getVersion() {
-	const pkg = JSON.parse(await readFile(path.join(ROOT, "package.json"), "utf-8"));
+	const raw = await readFile(path.join(ROOT, "package.json"), "utf-8");
+	const pkg = JSON.parse(raw) as { version?: string };
 	return pkg.version ?? "0.0.0";
 }
 
-// ─── Collect all files recursively from a directory ───────────────────────
-function collectFiles(dir: string, baseDir: string = dir): { abs: string; rel: string }[] {
-	const results: { abs: string; rel: string }[] = [];
-
-	for (const entry of readdirSync(dir)) {
-		const abs = path.join(dir, entry);
-		const rel = path.relative(baseDir, abs).replace(/\\/g, "/"); // normalize Windows paths
-		const stat = statSync(abs);
-
-		if (stat.isDirectory()) {
-			results.push(...collectFiles(abs, baseDir));
-		} else {
-			results.push({ abs, rel });
-		}
-	}
-
-	return results;
-}
-
-// ─── Build a zip for one target using Bun's zip-like approach ─────────────
-// Bun doesn't have a built-in zip API yet, so we shell out to the system zip
-// command. This works on Linux/macOS. On Windows, use WSL or PowerShell's
-// Compress-Archive (rare for extension dev workflows).
+// ─── Build a zip for one target ───────────────────────────────────────────
 async function buildZip(target: "firefox" | "chrome") {
 	const srcDir = target === "firefox" ? DIST_FF : DIST_CR;
 	const version = await getVersion();
 	const zipName = `primedl-${target}-${version}.zip`;
 	const zipPath = path.join(ZIP_OUT_DIR, zipName);
 
+	// Guard: dist directory must exist and be non-empty
 	if (!existsSync(srcDir) || readdirSync(srcDir).length === 0) {
 		console.error(`[build-zip] ❌  ${srcDir} is empty — run build:${target} first`);
 		process.exit(1);
@@ -68,44 +50,41 @@ async function buildZip(target: "firefox" | "chrome") {
 
 	mkdirSync(ZIP_OUT_DIR, { recursive: true });
 
-	// Remove old zip if it exists
+	// Remove previous zip for this version if it exists
 	if (existsSync(zipPath)) {
-		await Bun.file(zipPath).text().then(() => {
-			const { unlinkSync } = require("fs");
-			unlinkSync(zipPath);
-		}).catch(() => {});
+		unlinkSync(zipPath);
 	}
 
 	console.log(`[build-zip] Packing ${target} → ${zipName}`);
 
-	// Shell out to zip — most reliable cross-platform approach for now
+	// Shell out to system zip (Linux/macOS) — most reliable for extension packaging
 	const proc = Bun.spawn(["zip", "-r", "-q", zipPath, "."], {
 		cwd: srcDir,
 		stdout: "pipe",
-		stderr: "pipe",
+		stderr: "pipe"
 	});
 
 	const exitCode = await proc.exited;
-	const stderr = await new Response(proc.stderr).text();
 
 	if (exitCode !== 0) {
-		console.error(`[build-zip] zip failed (exit ${exitCode}): ${stderr}`);
+		const stderr = await new Response(proc.stderr).text();
+		console.error(`[build-zip] zip failed (exit ${exitCode}): ${stderr.trim()}`);
 
-		// Fallback: try PowerShell on Windows
+		// Fallback for Windows developers using PowerShell
 		if (process.platform === "win32") {
 			console.log("[build-zip] Trying PowerShell fallback…");
 			const ps = Bun.spawn(
 				[
 					"powershell",
 					"-Command",
-					`Compress-Archive -Path '${srcDir}\\*' -DestinationPath '${zipPath}' -Force`,
+					`Compress-Archive -Path '${srcDir}\\*' -DestinationPath '${zipPath}' -Force`
 				],
 				{ stdout: "pipe", stderr: "pipe" }
 			);
 			const psExit = await ps.exited;
 			if (psExit !== 0) {
 				const psErr = await new Response(ps.stderr).text();
-				console.error(`[build-zip] PowerShell fallback failed: ${psErr}`);
+				console.error(`[build-zip] PowerShell fallback failed: ${psErr.trim()}`);
 				process.exit(1);
 			}
 		} else {
@@ -113,10 +92,9 @@ async function buildZip(target: "firefox" | "chrome") {
 		}
 	}
 
-	// Verify the zip was created and report size
+	// Report final size
 	if (existsSync(zipPath)) {
-		const size = statSync(zipPath).size;
-		const kb = (size / 1024).toFixed(1);
+		const kb = (statSync(zipPath).size / 1024).toFixed(1);
 		console.log(`[build-zip] ✅  ${zipName} (${kb} KB)`);
 	}
 }

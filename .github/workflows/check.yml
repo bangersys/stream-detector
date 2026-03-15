@@ -1,0 +1,93 @@
+# primedl extension — PR check workflow
+#
+# Runs on every pull request to main/master.
+# Three jobs run in parallel:
+#   lint    — biome ci (strict read-only, fails on any warning or error)
+#   version — verify package.json + both manifests are in sync
+#   build   — full build of both targets to catch any bundler errors
+#
+# Ported from kairi003/Get-cookies.txt-LOCALLY (MIT) check.yaml.
+# Adapted for Bun toolchain and dual-manifest (Firefox MV2 + Chrome MV3).
+
+name: Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  # ── 1. Biome lint + format (strict, no auto-fix) ──────────────────────────
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Biome CI check
+        # biome ci is read-only — exits 1 on any lint or format issue.
+        # Equivalent to `npm run check` in kairi003 but stricter (no --write).
+        run: bun run ci
+
+  # ── 2. Version sync check ─────────────────────────────────────────────────
+  version:
+    name: Version Sync
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check version parity
+        # Verifies package.json, manifest-firefox.json, and manifest-chrome.json
+        # all declare the same version. Exits 1 if any are out of sync.
+        run: bun run check-version
+
+  # ── 3. Build verification ──────────────────────────────────────────────────
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build Firefox
+        run: bun run build:firefox
+
+      - name: Build Chrome
+        run: bun run build:chrome
+
+      - name: Verify build output
+        # Sanity check — both dist dirs must exist and contain a manifest.json
+        run: |
+          test -f dist/manifest.json        || (echo "❌ dist/manifest.json missing"        && exit 1)
+          test -f dist-chrome/manifest.json  || (echo "❌ dist-chrome/manifest.json missing" && exit 1)
+          echo "✅ Both build targets produced manifest.json"

@@ -1,0 +1,93 @@
+# primedl extension — Release workflow
+#
+# Triggers when a version tag (v*.*.*) is pushed.
+# Builds both Firefox and Chrome targets, packages them as .zip files,
+# then attaches both zips to the GitHub Release.
+#
+# Ported from kairi003/Get-cookies.txt-LOCALLY (MIT) release.yml.
+# Adapted for Bun toolchain and dual-target (Firefox MV2 + Chrome MV3).
+#
+# Usage:
+#   git tag v1.2.3
+#   git push origin v1.2.3
+#   → GitHub Release created with primedl-firefox-1.2.3.zip + primedl-chrome-1.2.3.zip
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write   # required by softprops/action-gh-release to create releases
+
+jobs:
+  build-and-release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # Sanity check — fail fast if versions are out of sync
+      - name: Verify version sync
+        run: bun run check-version
+
+      # Extract version from tag for artifact naming (strips leading "v")
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      # Clean + build both targets
+      - name: Clean
+        run: bun run clean
+
+      - name: Build Firefox
+        run: bun run build:firefox
+
+      - name: Build Chrome
+        run: bun run build:chrome
+
+      # Install zip (available on ubuntu-latest by default, but explicit is safer)
+      - name: Install zip
+        run: sudo apt-get install -y zip
+
+      # Package both builds into store-ready zip files
+      - name: Package Firefox zip
+        run: bun run build:zip:firefox
+
+      - name: Package Chrome zip
+        run: bun run build:zip:chrome
+
+      # Verify both zips exist before uploading
+      - name: Verify zips
+        run: |
+          FF_ZIP="dist/primedl-firefox-${{ steps.version.outputs.VERSION }}.zip"
+          CR_ZIP="dist/primedl-chrome-${{ steps.version.outputs.VERSION }}.zip"
+          test -f "$FF_ZIP" || (echo "❌ Firefox zip missing: $FF_ZIP" && exit 1)
+          test -f "$CR_ZIP" || (echo "❌ Chrome zip missing: $CR_ZIP" && exit 1)
+          echo "✅ Firefox: $(du -sh $FF_ZIP | cut -f1)"
+          echo "✅ Chrome:  $(du -sh $CR_ZIP | cut -f1)"
+
+      # Create GitHub Release and attach both zips
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          # Auto-generate release notes from commits since the last tag
+          generate_release_notes: true
+          files: |
+            dist/primedl-firefox-${{ steps.version.outputs.VERSION }}.zip
+            dist/primedl-chrome-${{ steps.version.outputs.VERSION }}.zip
+          # Release is created as a draft — review before publishing
+          draft: true

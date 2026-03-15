@@ -1,0 +1,59 @@
+# primedl extension — git hooks via Lefthook
+#
+# Ported from kairi003/Get-cookies.txt-LOCALLY (MIT) lefthook.yml.
+# Adapted for:
+#   - Bun instead of npm
+#   - Both manifests (manifest-firefox.json + manifest-chrome.json)
+#   - Our biome.json glob patterns
+#
+# Install:
+#   bunx lefthook install
+#
+# After install, hooks run automatically on git commit and git push.
+# To run manually:
+#   bunx lefthook run pre-commit
+#   bunx lefthook run pre-push
+
+pre-commit:
+  commands:
+    # Auto-fix lint + format issues on staged files before committing.
+    # Only runs on files that match the glob — ignores everything else.
+    fix:
+      glob: "*.{js,ts,d.ts,json,jsonc,css,html,md}"
+      run: >
+        bunx biome check
+        --write
+        --no-errors-on-unmatched
+        --files-ignore-unknown=true
+        {staged_files}
+      stage_fixed: true
+
+    # Keep all three version fields in sync whenever any of them is modified.
+    # Runs only when package.json or either manifest is staged.
+    sync-version:
+      glob:
+        - "package.json"
+        - "src/manifest-firefox.json"
+        - "src/manifest-chrome.json"
+      run: bun run sync-version
+      stage_fixed: true
+
+pre-push:
+  commands:
+    # Strict read-only biome check — fails the push if any issues remain.
+    # Unlike pre-commit fix, this does NOT auto-fix — the dev must fix manually.
+    check:
+      glob: "*.{js,ts,d.ts,json,jsonc,css,html,md}"
+      run: >
+        bunx biome check
+        --no-errors-on-unmatched
+        --files-ignore-unknown=true
+        {push_files}
+
+    # Verify all three versions are in sync before pushing.
+    check-version:
+      glob:
+        - "package.json"
+        - "src/manifest-firefox.json"
+        - "src/manifest-chrome.json"
+      run: bun run check-version
