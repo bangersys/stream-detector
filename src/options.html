@@ -3,8 +3,8 @@
 	<head>
 		<meta charset="UTF-8" />
 		<title>primedl Options</title>
-		<!-- FOUC prevention for options page too -->
-		<script>try{document.documentElement.dataset.theme=localStorage.getItem("pd-theme")||"default"}catch(e){}</script>
+		<!-- FOUC prevention — see fouc.js and popup.html for rationale -->
+		<script src="fouc.js"></script>
 		<link rel="stylesheet" href="css/tokens.css" />
 		<link rel="stylesheet" href="css/themes/terminal.css" />
 		<link rel="stylesheet" href="css/themes/clean-card.css" />
@@ -66,13 +66,7 @@
 					<td>
 						<input class="option" id="fileSizePref" type="checkbox" />
 						<div style="display: inline">
-							<input
-								class="option"
-								id="fileSizeAmount"
-								type="number"
-								min="1"
-								value="1"
-							/>
+							<input class="option" id="fileSizeAmount" type="number" min="1" value="1" />
 							MB
 						</div>
 					</td>
@@ -146,12 +140,7 @@
 				<tr>
 					<td><label for="fileExtension"></label></td>
 					<td>
-						<input
-							class="option"
-							id="fileExtension"
-							type="text"
-							placeholder="ts"
-						/>
+						<input class="option" id="fileExtension" type="text" placeholder="ts" />
 					</td>
 				</tr>
 
@@ -179,24 +168,14 @@
 					<td>
 						<input class="option" id="customCommandPref" type="checkbox" />
 						<div style="display: inline">
-							<input
-								class="option"
-								id="customCommand"
-								type="text"
-								placeholder="--verbose"
-							/>
+							<input class="option" id="customCommand" type="text" placeholder="--verbose" />
 						</div>
 					</td>
 				</tr>
 				<tr>
 					<td><label for="userCommand"></label></td>
 					<td>
-						<input
-							class="option"
-							id="userCommand1"
-							type="text"
-							placeholder="usercmd %url%"
-						/>
+						<input class="option" id="userCommand1" type="text" placeholder="usercmd %url%" />
 						<div class="tipContainer">
 							<span class="tip" id="userCommandTip">?</span>
 						</div>
@@ -205,35 +184,20 @@
 				<tr>
 					<td></td>
 					<td>
-						<input
-							class="option"
-							id="userCommand2"
-							type="text"
-							placeholder="usercmd %url%"
-						/>
+						<input class="option" id="userCommand2" type="text" placeholder="usercmd %url%" />
 					</td>
 				</tr>
 				<tr>
 					<td></td>
 					<td>
-						<input
-							class="option"
-							id="userCommand3"
-							type="text"
-							placeholder="usercmd %url%"
-						/>
+						<input class="option" id="userCommand3" type="text" placeholder="usercmd %url%" />
 					</td>
 				</tr>
 				<tr>
 					<td><label for="regexCommandPref"></label></td>
 					<td>
 						<input class="option" id="regexCommandPref" type="checkbox" />
-						&#47;&nbsp;<input
-							class="option"
-							id="regexCommand"
-							type="text"
-							placeholder="pattern"
-						/>&nbsp;&#47;
+						&#47;&nbsp;<input class="option" id="regexCommand" type="text" placeholder="pattern" />&nbsp;&#47;
 						<div class="tipContainer">
 							<span class="warning" id="regexWarning">!</span>
 						</div>
@@ -242,12 +206,7 @@
 				<tr>
 					<td></td>
 					<td>
-						<input
-							class="option"
-							id="regexReplace"
-							type="text"
-							placeholder="replacement"
-						/>
+						<input class="option" id="regexReplace" type="text" placeholder="replacement" />
 					</td>
 				</tr>
 
@@ -266,12 +225,7 @@
 					<td>
 						<input class="option" id="downloaderPref" type="checkbox" />
 						<div style="display: inline">
-							<input
-								class="option"
-								id="downloaderCommand"
-								type="text"
-								placeholder="aria2c"
-							/>
+							<input class="option" id="downloaderCommand" type="text" placeholder="aria2c" />
 						</div>
 					</td>
 				</tr>
@@ -280,14 +234,7 @@
 					<td>
 						<input class="option" id="multithreadPref" type="checkbox" />
 						<div style="display: inline">
-							<input
-								class="option"
-								id="multithreadAmount"
-								type="number"
-								min="2"
-								max="16"
-								value="4"
-							/>
+							<input class="option" id="multithreadAmount" type="number" min="2" max="16" value="4" />
 						</div>
 					</td>
 				</tr>
@@ -296,12 +243,7 @@
 					<td>
 						<input class="option" id="proxyPref" type="checkbox" />
 						<div style="display: inline">
-							<input
-								class="option"
-								id="proxyCommand"
-								type="text"
-								placeholder="socks5://127.0.0.1:1080"
-							/>
+							<input class="option" id="proxyCommand" type="text" placeholder="socks5://127.0.0.1:1080" />
 						</div>
 					</td>
 				</tr>
@@ -318,13 +260,7 @@
 					<td>
 						<input class="option" id="recentPref" type="checkbox" />
 						<div style="display: inline">
-							<input
-								class="option"
-								id="recentAmount"
-								type="number"
-								min="1"
-								value="5"
-							/>
+							<input class="option" id="recentAmount" type="number" min="1" value="5" />
 						</div>
 					</td>
 				</tr>
@@ -353,23 +289,11 @@
 				<tr>
 					<td><label for="primedlRelayPort">Relay port:</label></td>
 					<td>
-						<input
-							class="option"
-							id="primedlRelayPort"
-							type="number"
-							min="1024"
-							max="65535"
-							value="7421"
-						/>
+						<input class="option" id="primedlRelayPort" type="number" min="1024" max="65535" value="7421" />
 					</td>
 				</tr>
 
 				<!-- ── UI Theme ───────────────────────────────────────────── -->
-				<!--
-				  uiTheme is a class="option" element so saveOptionStorage saves it on change.
-				  theme.js listens via chrome.storage.onChanged and applies live.
-				  uiThemeTip span wires the i18n tooltip key that was previously unreachable.
-				-->
 				<tr>
 					<td><label for="uiTheme"></label></td>
 					<td>

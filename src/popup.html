@@ -4,11 +4,12 @@
 		<meta charset="UTF-8" />
 		<title>primedl</title>
 		<!--
-		  FOUC prevention: set data-theme before any CSS is parsed.
-		  localStorage holds the last-used theme as a synchronous cache.
-		  theme.js will async-confirm from chrome.storage and update if needed.
+		  FOUC prevention — loads fouc.js as a static external script.
+		  Chrome MV3 CSP blocks ALL inline <script> tags (no unsafe-inline).
+		  fouc.js is a plain synchronous script (no defer/async/module) so it
+		  executes immediately, setting data-theme on <html> before CSS paints.
 		-->
-		<script>try{document.documentElement.dataset.theme=localStorage.getItem("pd-theme")||"default"}catch(e){}</script>
+		<script src="fouc.js"></script>
 		<!-- 1. Token layer (defines all --pd-* custom properties) -->
 		<link rel="stylesheet" href="css/tokens.css" />
 		<!-- 2. Theme overrides (each file scoped to [data-theme="X"]) -->

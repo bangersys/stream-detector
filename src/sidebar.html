@@ -3,8 +3,8 @@
 	<head>
 		<meta charset="UTF-8" />
 		<title>primedl</title>
-		<!-- FOUC prevention: apply cached theme before CSS loads -->
-		<script>try{document.documentElement.dataset.theme=localStorage.getItem("pd-theme")||"default"}catch(e){}</script>
+		<!-- FOUC prevention — see fouc.js and popup.html for rationale -->
+		<script src="fouc.js"></script>
 		<!-- Token layer -->
 		<link rel="stylesheet" href="css/tokens.css" />
 		<!-- Theme overrides -->

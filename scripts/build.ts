@@ -41,7 +41,10 @@ const JS_ENTRIES = ["src/js/background.js", "src/js/popup.js", "src/js/options.j
 
 // Static assets to copy verbatim (relative to src/)
 const STATIC_DIRS = ["css", "img", "_locales"];
-const STATIC_FILES = ["popup.html", "sidebar.html", "options.html", "favicon.ico"];
+// fouc.js: plain synchronous script for FOUC prevention.
+// Must NOT be bundled as an ES module (no type="module", no imports).
+// Chrome MV3 CSP blocks inline scripts so this must be an external file.
+const STATIC_FILES = ["popup.html", "sidebar.html", "options.html", "fouc.js", "favicon.ico"];
 
 // ─── Build one target ──────────────────────────────────────────────────────
 async function buildTarget(target: "firefox" | "chrome") {
@@ -99,7 +102,7 @@ async function buildTarget(target: "firefox" | "chrome") {
 	const manifest = await Bun.file(manifestSrc).text();
 	await Bun.write(path.join(outDir, "manifest.json"), manifest);
 
-	// Copy static HTML files
+	// Copy static HTML + JS files
 	for (const file of STATIC_FILES) {
 		const src = path.join(SRC, file);
 		const dest = path.join(outDir, file);
