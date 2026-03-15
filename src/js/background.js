@@ -30,7 +30,7 @@ import iconLightEnabled48 from "../img/icon-light-enabled-48.png";
 import iconLightEnabled96 from "../img/icon-light-enabled-96.png";
 import { getCookiesForUrl } from "./components/cookies.js";
 import defaults from "./components/defaults.js";
-import { reconnect as relayReconnect, sendDetection } from "./components/relay.js";
+import { reconnect as relayReconnect, sendDetection, setRelayEnabled } from "./components/relay.js";
 import { clearStorage, getStorage, setStorage } from "./components/storage.js";
 import supported from "./components/supported.js";
 
@@ -483,6 +483,9 @@ const init = async () => {
 					addListeners();
 				}
 				updateIcons();
+
+				// If relay enabled/disabled in options, connect or disconnect immediately
+				await setRelayEnabled(primedlRelayEnabled !== false);
 			} else if (message.reset) {
 				await clearStorage();
 				urlStorage = [];
